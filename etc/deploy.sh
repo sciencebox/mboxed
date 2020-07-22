@@ -28,8 +28,6 @@ prepare_kuboxed() {
   #
   # TODO: This should all go away once we have helm charts!
   #
-  local yaml_folder=$KUBOXED_FOLDER
-
   echo "Modifying kuboxed for the current setup..."
 
   # Change labels to minikube
@@ -72,7 +70,8 @@ prepare_kuboxed() {
   done
 }
 
-create_persistent_storage() {
+
+get_persistent_storage_paths() {
   # These are the required folders:
   # - /mnt/cbox_shares_db/cbox_data
   # - /mnt/cbox_shares_db/cbox_MySQL
@@ -84,16 +83,25 @@ create_persistent_storage() {
   # - /mnt/jupyterhub_data
   # - /mnt/ldap/config
   # - /mnt/ldap/userdb
+  # - /var/kubeVolumes (subolders will be automatically created)
 
   # TODO:
   #   By now, they are inferred from the YAML files, but this will disappear with Helm
   #
   local folders_list
+  folders_list=$(cat $KUBOXED_FOLDER/*.yaml | grep -i "hostPath:" -A 2 | grep -i -w "type: Directory" -B 1 | grep -i "path: " | awk '{print $NF}')
+  folders_list=$(echo $folders_list "/var/kubeVolumes") # This is for logs and other non-critical storage #TODO: Hard-coded=Bad.
+
+  echo $folders_list | tr ' ' '\n' | sort | uniq | tr '\n' ' '
+}
+
+
+create_persistent_storage() {
+  local folders_list=$(get_persistent_storage_paths)
   local fld
   
   echo "Preparing persistent storage..."
-  folders_list=$(cat $KUBOXED_FOLDER/*.yaml | grep -i "hostPath:" -A 2 | grep -i -w "type: Directory" -B 1 | grep -i "path: " | awk '{print $NF}')
-  folders_list=$(echo $folders_list "/var/kubeVolumes") # This is for logs and other non-critical storage
+  folders_list=$(get_persistent_storage_paths)
   for fld in $folders_list
   do
     if [ -d $fld ]; then
@@ -103,7 +111,7 @@ create_persistent_storage() {
       if [ $? -eq 0 ]; then
         echo "  ✓ $fld"
       else
-        echo "  ✗ $fld"
+        echo "  ✗ $fld (error while creating folder)"
       fi
     fi
   done
@@ -111,24 +119,45 @@ create_persistent_storage() {
 
 
 delete_persistent_storage() {
-  echo 'delete_persiste_storage: tbi'
+  local folders_list
+  local fld
+
+  #
+  # TODO: Does not delete parent folders
+  # e.g., /mnt/ldap/config, only 'config' is deleted and not 'ldap'
+  #
+  echo "Deleting persistent storage..."
+  folders_list=$(get_persistent_storage_paths)
+  for fld in $folders_list
+  do
+    if [ -d $fld ]; then
+      #TODO: This is dangerous. Not sure I want to `rm -rf` a list of folders inferred form other files
+      #rm -rf $fld > /dev/null 2>&1
+      echo "Not deleting $fld. Please, do it manually if totally sure."
+      #if [ $? -eq 0 ]; then
+      #  echo "  ✓ $fld"
+      #else
+      #  echo "  ✗ $fld (error while deleting folder)"
+      #fi
+    else
+      echo "  ✓ $fld (does not exist)"
+    fi
+  done
 }
 
 
-
 get_sciencebox_images_list() {
-  local yaml_folder=$KUBOXED_FOLDER
   local yaml_file
   local img
   local img_list=''
 
-  if [ x"$yaml_folder" == x"" ]; then
+  if [ x"$KUBOXED_FOLDER" == x"" ]; then
     return 1
   fi
-  for yaml_file in $(ls $yaml_folder)
+  for yaml_file in $(ls $KUBOXED_FOLDER)
   do
-    if [ -f $yaml_folder/$yaml_file ]; then
-    img=$(cat $yaml_folder/$yaml_file | grep 'image:' | awk '{print $NF}' | tr -d '"')
+    if [ -f $KUBOXED_FOLDER/$yaml_file ]; then
+    img=$(cat $KUBOXED_FOLDER/$yaml_file | grep 'image:' | awk '{print $NF}' | tr -d '"')
       if [ x"$img" != x"" ]; then
         img_list=$(echo $img_list $img)
       fi
@@ -139,19 +168,29 @@ get_sciencebox_images_list() {
 
 
 get_singleuser_image_name() {
-  local yaml_folder=$KUBOXED_FOLDER
   local img=''
 
   #TODO: This is bad as it is based on some design assumptions and naming conventions
-  if [ -f $yaml_folder'/SWAN.yaml' ]; then
-    img=$(cat $yaml_folder'/SWAN.yaml' | grep CONTAINER_IMAGE -A 1 | grep 'value:' | awk '{print $2}' | tr -d '"')
+  if [ -f $KUBOXED_FOLDER'/SWAN.yaml' ]; then
+    img=$(cat $KUBOXED_FOLDER'/SWAN.yaml' | grep CONTAINER_IMAGE -A 1 | grep 'value:' | awk '{print $2}' | tr -d '"')
   fi
   echo $img
 }
 
 
+get_required_images_list() {
+  local sciencebox_images
+  local singleuser_image
+  local images_list
+
+  sciencebox_images=$(get_sciencebox_images_list)
+  singleuser_image=$(get_singleuser_image_name)
+  echo $sciencebox_images $singleuser_image | tr ' ' '\n' | sort | uniq | tr '\n' ' '
+}
+
+
 pre_pull_images() {
-  local images_list=$1
+  local images_list=$(get_required_images_list)
   local img
 
   echo "Pre-pulling required Docker images locally:"
@@ -164,7 +203,7 @@ pre_pull_images() {
 
 
 check_required_images() {
-  local images_list=$1
+  local images_list=$(get_required_images_list)
   local img
 
   echo "Checking images availability:"
@@ -180,29 +219,25 @@ check_required_images() {
 
 
 delete_images() {
-  local images_list=$1
+  local images_list=$(get_required_images_list)
   local img
 
   echo "Deleting Docker images:"
   for img in $images_list
   do
     echo "  ✓ $img"
-    # TODO: Implement docker delete
+    docker image rm $img > /dev/null 2>&1
   done
 }
 
 
 create_namespace() {
-  local yaml_folder=$KUBOXED_FOLDER
-
   echo "Creating namespace..."
   kubectl apply -f $KUBOXED_FOLDER/BOXED.yaml > /dev/null 2>&1
 }
 
 
 deploy_services() {
-  local yaml_folder=$KUBOXED_FOLDER
-
   echo "Deploying services:"
   #kubectl apply -f $KUBOXED_FOLDER/LDAP.yaml
 
