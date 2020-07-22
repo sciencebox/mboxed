@@ -37,12 +37,17 @@ fi
 
  
 # Ask the user to continue with the installation
-#   Typically follows software version mismatch or other (non-critical) errors
+#   Args:
+#     - Message to print
 #   According to the user choice, it either returns 0 or causes the installation script to bail out
 prompt_user_to_continue() {
+  local message=$1
   local response
 
-  read -r -p "Do you want to continue with the installation? [y/N] " response
+  if [ x"$message" == x"" ]; then
+    message='Do you want to continue?'
+  fi
+  read -r -p "$message [y/N] " response
   case "$response" in
     [yY])
       return 0
