@@ -4,10 +4,16 @@
 source etc/common.sh
 source etc/deploy.sh
 
+# Preparation
 need_root
+echo "WARNING: This will stop all the ScienceBox services and *DELETE* all data stored in ScienceBox (CERNBox files, Jupyter notebooks, etc.)."
+prompt_user_to_continue
+
+# Stop services first
 stop_minikube
-sciencebox_images=$(get_sciencebox_images_list)
-singleuser_image=$(get_singleuser_image_name)
-images_list=$(echo $sciencebox_images $singleuser_image | tr ' ' '\n' | sort | uniq | tr '\n' ' ')
-delete_images "$images_list"
+
+# Delete pulled images to reclaim space
+delete_images
+
+# Delete stored configs, users' files, etc.
 delete_persistent_storage
