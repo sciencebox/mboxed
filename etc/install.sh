@@ -3,7 +3,7 @@
 
 
 # Required packages
-ESSENTIAL_PACKAGES='curl gawk git hostname sed which'
+ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed which'
 DEPENDENCIES_CENTOS='conntrack-tools'
 DEPENDENCIES_UBUNTU='conntrack'
 
@@ -31,7 +31,7 @@ warn_about_software_requirements() {
   local pkg_list=$ESSENTIAL_PACKAGES" "$DEPENDENCIES_CENTOS" docker kubectl minikube"
   for pkg in $(echo $pkg_list | tr ' ' '\n' | sort)
   do
-    echo "    - $pkg"
+    echo "  - $pkg"
   done
 }
 
@@ -89,7 +89,7 @@ print_version_correct() {
   local obj=$1
   local ver=$2
 
-  echo "$obj is installed at the required version ($ver)"
+  echo "  ✓ $obj is installed at the required version ($ver)"
 }
 
 package_exists() {
@@ -105,23 +105,23 @@ _install_packages() {
   for pkg in $pkg_list; do
   check_pkg=$(rpm -q $pkg)
   if [ $? -ne 0 ]; then
-    echo "Installing $pkg..."
+    echo "  Installing $pkg..."
     yum -y -q install $pkg
   fi
-  echo "$pkg: found $(rpm -q $pkg)"
+  echo "  ✓ $pkg: found $(rpm -q $pkg)"
   done
 }
 
 install_essentials() {
   echo "Installing essential packages..."
-  _install_packages $ESSENTIAL_PACKAGES
+  _install_packages "$ESSENTIAL_PACKAGES"
 }
 
 install_dependencies() {
   echo "Installing required dependencies..."
 
   #TODO: Switch OS
-  _install_packages $DEPENDENCIES_CENTOS
+  _install_packages "$DEPENDENCIES_CENTOS"
 }
 
 
