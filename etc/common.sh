@@ -4,26 +4,7 @@
 
 # Environment
 HOSTNAME=$(hostname -s)
-
-# TODO: Fix this.
-#CWD=$(DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )")
-CWD=$PWD
-
-# EOS
-EOS_FST_NUMBER=4
-
-# SWAN listening ports
-SWAN_HTTP_PORT='10080'
-SWAN_HTTPS_PORT='10443'
-
-# Kuboxed
-KUBOXED_GIT='https://github.com/cernbox/kuboxed.git'
-KUBOXED_FOLDER='kuboxed'
-
-# Minikube params
-MINIKUBE_DRIVER='none'
-MINIKUBE_NODE_LABEL='minikube'
-
+CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Functions
 # Check to be root
