@@ -2,16 +2,92 @@
 # Parameters and functions to handle deployment of ScienceBox
 
 
+# Minikube params
+MINIKUBE_DRIVER='none'
+MINIKUBE_NODE_LABEL='minikube'
+
+# Kuboxed
+KUBOXED_GIT='https://github.com/cernbox/kuboxed.git'
+KUBOXED_FOLDER='kuboxed'
+
+# EOS
+EOS_FST_NUMBER=4
+
+# SWAN listening ports
+SWAN_HTTP_PORT='10080'
+SWAN_HTTPS_PORT='10443'
+
+
 start_minikube() {
   #TODO: Investigate other dirvers
+  echo "Starting minikube..."
   minikube start --driver=$MINIKUBE_DRIVER --kubernetes-version=$KUBERNETES_VERSION
-
-  #TODO: How to handle errors here
-  return $?
+  if [ $? -ne 0 ]; then
+    echo "  ✗ Error starting minikube"
+    echo "Cannot continue."
+    exit 1
+  fi
 }
 
 stop_minikube() {
+  echo "Stopping minikube..."
   minikube stop
+}
+
+delete_minikube() {
+  echo "Deleting minikube..."
+  minikube delete
+}
+
+configure_sysctl_param() {
+  local param=$1
+  local value
+
+  value=$(sysctl $param --values)
+  if [ $? -ne 0 ]; then
+    echo "  ✗ Error configuring $param"
+  fi
+  if [ $value -eq 1 ]; then
+    echo "  ✓ $param=$value (not modified)"
+  else
+    sysctl $param=1 > /dev/null 2>&1
+    echo "  ✓ $param=$value (changed to 1)"
+  fi
+}
+
+
+warn_configure_network(){
+  local iptables_save_file=$PWD"/iptables.save"
+
+  echo "WARNING: iptables and IP forwarding rules need to be modified."
+  echo "  - The existing iptables configuration will be saved to file ($iptables_save_file) in order to restore it, if needed."
+  echo "  - Changes to IP forwarding rules will be reported to roll them back, if needed."
+  prompt_user_to_continue
+}
+
+
+configure_network() {
+  local iptables_save_file=$PWD"/iptables.save"
+  local netconf_list='net.ipv4.conf.all.forwarding net.ipv6.conf.all.forwarding net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables'
+  local netconf
+
+  echo "Configuring network forwarding parameters..."
+  for netconf in $netconf_list
+  do
+    configure_sysctl_param $netconf
+  done
+
+  echo "Configuring iptables..."
+  iptables-save > $iptables_save_file
+  if [ $? -eq 0 ]; then
+    echo "  ✓ iptables configuration saved to $iptables_save_file. Restore it with \`iptables-restore < $iptables_save_file\` if needed"
+  else
+    echo "  ✗ Error saving iptables configuration to $iptables_save_file"
+    echo "  Dumping iptable configuration now:"
+    iptables-save
+  fi
+  iptables --flush
+  iptables --table nat --flush
 }
 
 
@@ -133,7 +209,7 @@ delete_persistent_storage() {
     if [ -d $fld ]; then
       #TODO: This is dangerous. Not sure I want to `rm -rf` a list of folders inferred form other files
       #rm -rf $fld > /dev/null 2>&1
-      echo "Not deleting $fld. Please, do it manually if totally sure."
+      echo "  --> Not deleting $fld. Do it manually if totally sure."
       #if [ $? -eq 0 ]; then
       #  echo "  ✓ $fld"
       #else
@@ -237,10 +313,70 @@ create_namespace() {
 }
 
 
-deploy_services() {
-  echo "Deploying services:"
-  #kubectl apply -f $KUBOXED_FOLDER/LDAP.yaml
+get_namespace() {
+  local namespace
 
-  echo "dpeloy_services: tbi"
+  namespace=$(cat $KUBOXED_FOLDER/BOXED.yaml | grep -i "metadata:" -A 1 | grep -i "name:" | awk '{print $NF}')
+  echo $namespace
+}
+
+
+check_service_running() {
+  local pod_name=$1
+  local pod_namespace=$(get_namespace)
+
+  res=$(kubectl --namespace=$pod_namespace get pods --no-headers --field-selector=status.phase==Running -o custom-columns=NAME:.metadata.name | grep -i ^$pod_name)
+  if [ x"$res" == x"" ]; then
+    return 1
+  fi
+  return 0
+}
+
+
+_deploy_service() {
+  local svc_name=$1
+  local svc_yaml=$2
+
+  kubectl apply -f $svc_yaml > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "  ✗ Error deploying $svc_name"
+    echo "Cannot continue."
+    exit 1
+  fi
+  check_service_running $svc_name
+  # TODO: Put a timout here
+  while ! $(check_service_running $svc_name)
+  do
+    sleep 5
+  done
+  echo "  ✓ $svc_name"
+}
+
+deploy_services() {
+  echo "Deploying services (might take some time):"
+
+  # LDAP
+  _deploy_service "ldap" "$KUBOXED_FOLDER/LDAP.yaml"
+  # TODO: Add the dummy users in LDAP
+
+  # EOS
+  _deploy_service "eos-mgm" "$KUBOXED_FOLDER/eos-storage-mgm.yaml"
+  # TODO: Actions to configure the MGM should go here
+  ###sleep 30
+  ###echo "  ✓ eos-mgm configuration"
+  ###for no in $(seq 1 $EOS_FST_NUMBER)
+  ###do
+  ###  _deploy_service "eos-fst$no" "$KUBOXED_FOLDER/eos-storage-fst$no\.yaml"
+  ###done
+
+  #### CERNBOX
+  ###_deploy_service "cernbox" "$KUBOXED_FOLDER/CERNBOX.yaml"
+
+  #### SWAN
+  ####TODO: Check #sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
+  ###_deploy_service "swan" "$KUBOXED_FOLDER/SWAN.yaml"
+  ####TODO: Check 
+  ###  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
+  ###  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 

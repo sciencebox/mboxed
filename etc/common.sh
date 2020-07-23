@@ -6,6 +6,10 @@
 HOSTNAME=$(hostname -s)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+# Kubernetes params
+KUBERNETES_VERSION='v1.15.0'
+
+
 # Functions
 # Check to be root
 #   If not root, bail out
