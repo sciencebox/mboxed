@@ -99,6 +99,42 @@ get_git_repo() {
 }
 
 
+# Start Docker
+#   Returns exit code of `systemctl start docker`
+start_docker() {
+  systemctl start docker > /dev/null 2>&1
+  return $?
+}
+
+# Stop Docker
+#   Returns exit code of `systemctl stop docker`
+stop_docker() {
+  systemctl stop docker > /dev/null 2>&1
+  return $?
+}
+
+# Restart Docker
+#   Returns 1 if either between stop and start operations fail, 0 otherwise
+restart_docker() {
+  if ! stop_docker; then
+    echo "ERROR: Unable to stop Docker "
+    return 1
+  fi
+  if ! start_docker; then
+    echo "ERROR: Unable to start Docker "
+    return 1
+  fi
+  return 0
+}
+
+# Get Docker status
+#   Prints the output of `systemctl status docker`
+#   Returns exit code of `systemctl status docker`
+get_docker_status() {
+  systemctl status docker
+  return $?
+}
+
 # Pull Docker image asynchronously
 #   Args:
 #     - URI of the image to be pulled
