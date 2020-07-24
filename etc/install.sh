@@ -135,8 +135,8 @@ _install_docker() {
 
   # TODO: Switch according to the OS
   yum install -y -q $docker_package_url 
-  systemctl start docker
-  systemctl status docker
+  start_docker
+  get_docker_status
 }
 
 install_docker() {
