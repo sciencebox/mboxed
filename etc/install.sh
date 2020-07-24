@@ -3,7 +3,7 @@
 
 
 # Required packages
-ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed which'
+ESSENTIAL_PACKAGES='curl gawk git hostname iptables procps-ng sed which'
 DEPENDENCIES_CENTOS='conntrack-tools'
 DEPENDENCIES_UBUNTU='conntrack'
 
@@ -11,7 +11,7 @@ DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
 DOCKER_URL_CENTOS='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
 DOCKER_URL_UBUNTU=''
 
-KUBERNETES_VERSION='v1.15.0'
+#KUBERNETES_VERSION --> See common.sh
 KUBECTL_URL_CENTOS="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
 KUBECTL_URL_UBUNTU=''
 
