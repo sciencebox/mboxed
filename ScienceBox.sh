@@ -8,7 +8,7 @@ source etc/deploy.sh
 # Preparation
 need_root
 #warn_about_interfence_eos_cvmfs
-warn_configure_network
+configure_network
 
 # Get kuboxed
 get_git_repo $KUBOXED_GIT

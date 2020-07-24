@@ -56,20 +56,18 @@ configure_sysctl_param() {
 }
 
 
-warn_configure_network(){
-  local iptables_save_file=$PWD"/iptables.save"
-
-  echo "WARNING: iptables and IP forwarding rules need to be modified."
-  echo "  - The existing iptables configuration will be saved to file ($iptables_save_file) in order to restore it, if needed."
-  echo "  - Changes to IP forwarding rules will be reported to roll them back, if needed."
-  prompt_user_to_continue
-}
-
-
 configure_network() {
   local iptables_save_file=$PWD"/iptables.save"
   local netconf_list='net.ipv4.conf.all.forwarding net.ipv6.conf.all.forwarding net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables'
   local netconf
+
+  echo "WARNING: iptables and IP forwarding rules need to be modified."
+  echo "  - The existing iptables configuration will be saved to file ($iptables_save_file) in order to restore it, if needed."
+  echo "  - Changes to IP forwarding rules will be reported to roll them back, if needed."
+  echo "WARNING: Docker needs to be restarted to subsequently to the network changes."
+  echo "  - The Docker configuration will be left untouched."
+  echo "  - Running containers will temporarily stop while the Docker server restarts."
+  prompt_user_to_continue
 
   echo "Configuring network forwarding parameters..."
   for netconf in $netconf_list
@@ -87,7 +85,10 @@ configure_network() {
     iptables-save
   fi
   iptables --flush
-  iptables --table nat --flush
+  #iptables --table nat --flush
+
+  echo "Restarting Docker..."
+  restart_docker
 }
 
 
@@ -126,17 +127,17 @@ prepare_kuboxed() {
   sed -i "s/^\( *hostPort: &HTTP_PORT *\)[^ ]*\(.*\)*$/\1$SWAN_HTTP_PORT\2/" $KUBOXED_FOLDER/SWAN.yaml
   local swan_http_port_lineno=$(cat $KUBOXED_FOLDER/SWAN.yaml | grep "name: HTTP_PORT" -n | cut -d ':' -f 1)
   swan_http_port_lineno=$(($swan_http_port_lineno+1))
-  sed -i "$swan_http_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1$SWAN_HTTP_PORT\2/" $KUBOXED_FOLDER/SWAN.yaml
+  sed -i "$swan_http_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1\"$SWAN_HTTP_PORT\"\2/" $KUBOXED_FOLDER/SWAN.yaml
   ##   Change HTTPS port
   sed -i "s/^\( *hostPort: &HTTPS_PORT *\)[^ ]*\(.*\)*$/\1$SWAN_HTTPS_PORT\2/" $KUBOXED_FOLDER/SWAN.yaml
   local swan_https_port_lineno=$(cat $KUBOXED_FOLDER/SWAN.yaml | grep "name: HTTPS_PORT" -n | cut -d ':' -f 1)
   swan_https_port_lineno=$(($swan_https_port_lineno+1))
-  sed -i "$swan_https_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1$SWAN_HTTPS_PORT\2/" $KUBOXED_FOLDER/SWAN.yaml
+  sed -i "$swan_https_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1\"$SWAN_HTTPS_PORT\"\2/" $KUBOXED_FOLDER/SWAN.yaml
   ##   Change upstream SWAN server port in CERNBOX nginx configuration
   sed -i 's/^\( *hostNetwork: *\)[^ ]*\(.*\)*$/\1false\2/' $KUBOXED_FOLDER/SWAN.yaml    # Swan should not use the host network
   local swan_port_lineno=$(cat $KUBOXED_FOLDER/CERNBOX.yaml | grep SWAN_BACKEND_PORT -n | cut -d ':' -f 1)
   swan_port_lineno=$(($swan_port_lineno+1))
-  sed -i "$swan_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1$SWAN_HTTPS_PORT\2/" $KUBOXED_FOLDER/CERNBOX.yaml
+  sed -i "$swan_port_lineno s/^\( *value: *\)[^ ]*\(.*\)*$/\1\"$SWAN_HTTPS_PORT\"\2/" $KUBOXED_FOLDER/CERNBOX.yaml
 
   # Create YAML files for EOS FSTs
   for no in $(seq 1 $EOS_FST_NUMBER)
@@ -336,6 +337,8 @@ check_service_running() {
 _deploy_service() {
   local svc_name=$1
   local svc_yaml=$2
+  local wait_time=0
+  local timeout=300
 
   kubectl apply -f $svc_yaml > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -343,13 +346,19 @@ _deploy_service() {
     echo "Cannot continue."
     exit 1
   fi
-  check_service_running $svc_name
-  # TODO: Put a timout here
   while ! $(check_service_running $svc_name)
   do
     sleep 5
+    wait_time=$(($wait_time+5))
+    if [ $wait_time -ge $timeout ]; then
+      break
+    fi
   done
-  echo "  ✓ $svc_name"
+  if [ $wait_time -ge $timeout ]; then
+    echo "  ✗ Error deploying $svc_name (timeout after $wait_time)"
+  else
+    echo "  ✓ $svc_name"
+  fi
 }
 
 deploy_services() {
@@ -362,21 +371,21 @@ deploy_services() {
   # EOS
   _deploy_service "eos-mgm" "$KUBOXED_FOLDER/eos-storage-mgm.yaml"
   # TODO: Actions to configure the MGM should go here
-  ###sleep 30
-  ###echo "  ✓ eos-mgm configuration"
-  ###for no in $(seq 1 $EOS_FST_NUMBER)
-  ###do
-  ###  _deploy_service "eos-fst$no" "$KUBOXED_FOLDER/eos-storage-fst$no\.yaml"
-  ###done
+  sleep 30
+  echo "  ✓ eos-mgm configuration"
+  for no in $(seq 1 $EOS_FST_NUMBER)
+  do
+    _deploy_service "eos-fst$no" "$KUBOXED_FOLDER/eos-storage-fst$no.yaml"
+  done
 
-  #### CERNBOX
-  ###_deploy_service "cernbox" "$KUBOXED_FOLDER/CERNBOX.yaml"
+  # CERNBOX
+  _deploy_service "cernbox" "$KUBOXED_FOLDER/CERNBOX.yaml"
 
-  #### SWAN
-  ####TODO: Check #sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
-  ###_deploy_service "swan" "$KUBOXED_FOLDER/SWAN.yaml"
-  ####TODO: Check 
-  ###  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
-  ###  #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
+  # SWAN
+  #TODO: Check #sudo kubectl create clusterrolebinding add-on-cluster-admin --clusterrole=cluster-admin --serviceaccount=boxed:default
+  _deploy_service "swan" "$KUBOXED_FOLDER/SWAN.yaml"
+  #TODO: Check 
+    #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
+    #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
