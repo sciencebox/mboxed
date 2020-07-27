@@ -57,7 +57,7 @@ configure_sysctl_param() {
 
 
 configure_network() {
-  local iptables_save_file=$PWD"/iptables.save"
+  local iptables_save_file=$PWD"/iptables_"$(date +%s)".save"
   local netconf_list='net.ipv4.conf.all.forwarding net.ipv6.conf.all.forwarding net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables'
   local netconf
 
@@ -78,7 +78,8 @@ configure_network() {
   echo "Configuring iptables..."
   iptables-save > $iptables_save_file
   if [ $? -eq 0 ]; then
-    echo "  ✓ iptables configuration saved to $iptables_save_file. Restore it with \`iptables-restore < $iptables_save_file\` if needed"
+    echo "  ✓ iptables configuration saved to $iptables_save_file."
+    #echo "  Restore it with \`iptables-restore < $iptables_save_file\` if needed"
   else
     echo "  ✗ Error saving iptables configuration to $iptables_save_file"
     echo "  Dumping iptable configuration now:"
@@ -89,6 +90,14 @@ configure_network() {
 
   echo "Restarting Docker..."
   restart_docker
+}
+
+
+suggest_iptables_restore() {
+  echo "WARNING: iptables configuration was modified when setting up ScienceBox."
+  echo "  Consider restoring the previous configuraton with \`iptables-restore < iptables_<timestamp>.save\`."
+  echo "  If you ran the set up script multiple times, you should like restore the oldest file."
+
 }
 
 

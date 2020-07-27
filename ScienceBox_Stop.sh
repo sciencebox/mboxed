@@ -4,8 +4,13 @@
 source etc/common.sh
 source etc/deploy.sh
 
+# Preparation
 need_root
-
 echo "WARNING: This will stop all the ScienceBox services, including CERNBox storage and SWAN sessions."
 prompt_user_to_continue
+
+# Stop ScienceBox
 stop_minikube
+
+# Restore iptables config if the user wants
+suggest_iptables_restore
