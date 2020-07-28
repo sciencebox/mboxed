@@ -21,6 +21,42 @@ fi
 }
 
  
+# Detect the host operating system
+#   Parses '/etc/os-release' to detect the operating system
+# Exports:
+#   - OS_ID (example, 'ubuntu', 'centos')
+#   - OS_VERSION (e.g., '18.04', '7')
+#   - OS_CODENAME (e.g., 'bionic', 'focal') if exists
+# Returns 0 if operating system is supported, bails out otherwise
+guess_os() {
+  local os_id
+  local os_version
+  local os_codename
+  local os_release_file='/etc/os-release'
+  local supported_oses='centos ubuntu'
+
+  if [ ! -f $os_release_file ]; then
+    echo "ERROR: Unable to detect the operating system."
+    echo "Cannot continue."
+    exit 1
+  fi
+
+  os_id=$(cat $os_release_file | grep "^ID=" | cut -d '=' -f 2- | tr '[:upper:]' '[:lower:]')
+  os_version=$(cat $os_release_file | grep "^VERSION_ID=" | cut -d '=' -f 2- | tr -d '"')
+  os_codename=$(cat $os_release_file | grep "^VERSION_CODENAME=" | cut -d '=' -f 2- | tr '[:upper:]' '[:lower:]')
+  if [[ $supported_oses == *"$os_id"*  ]]; then
+    export OS_ID="$os_id"
+    export OS_VERSION="$os_version"
+    export OS_CODENAME="$os_codename"
+    return 0
+  else
+    echo "ERROR: $os_id is not supported."
+    echo "Cannot continue."
+    exit 1
+  fi
+}
+
+
 # Ask the user to continue with the installation
 #   Args:
 #     - Message to print
@@ -131,7 +167,7 @@ restart_docker() {
 #   Prints the output of `systemctl status docker`
 #   Returns exit code of `systemctl status docker`
 get_docker_status() {
-  systemctl status docker
+  systemctl status docker --no-pager
   return $?
 }
 

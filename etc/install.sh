@@ -3,52 +3,43 @@
 
 
 # Required packages
-ESSENTIAL_PACKAGES='curl gawk git hostname iptables procps-ng sed which'
-DEPENDENCIES_CENTOS='conntrack-tools'
-DEPENDENCIES_UBUNTU='conntrack'
+ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed'
+CONTAINER_PACKAGES='docker kubectl minikube'
+DEPENDENCIES_CENTOS='conntrack-tools procps-ng which'
+DEPENDENCIES_UBUNTU='conntrack debianutils procps'
 
 DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
 DOCKER_URL_CENTOS='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
-DOCKER_URL_UBUNTU=''
+DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 
 #KUBERNETES_VERSION --> See common.sh
-KUBECTL_URL_CENTOS="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
-KUBECTL_URL_UBUNTU=''
+KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
 
 MINIKUBE_VERSION='v1.12.0'
-MINIKUBE_URL_CENTOS="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
-MINIKUBE_URL_UBUNTU=''
+MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
 
 
 # Functions
 # Warn about software that will be installed
 warn_about_software_requirements() {
-  echo "The following software will be installed (if not already available):"
-
-  # TODO: Switch OS
-
   local pkg
-  local pkg_list=$ESSENTIAL_PACKAGES" "$DEPENDENCIES_CENTOS" docker kubectl minikube"
+  local pkg_list
+
+  echo "The following software will be installed (if not already available):"
+  case "$OS_ID" in
+    centos)
+      pkg_list="$ESSENTIAL_PACKAGES $DEPENDENCIES_CENTOS $CONTAINER_PACKAGES"
+      ;;
+    ubuntu)
+      pkg_list="$ESSENTIAL_PACKAGES $DEPENDENCIES_UBUNTU $CONTAINER_PACKAGES"
+      ;;
+  esac
   for pkg in $(echo $pkg_list | tr ' ' '\n' | sort)
   do
     echo "  - $pkg"
   done
 }
 
-
-get_package_version() {
-  local pkg=$1
-  local ver
-
-  # TODO: Switch according to the OS
-  # This is good for CC7
-  ver=$(rpm -q --qf "%{VERSION}" $pkg)
-  if [ $? -eq 0 ]; then
-    echo $ver
-  else
-    echo '-1' # package not found
-  fi
-}
 
 verify_package_version_match() {
   local pkg=$1
@@ -92,36 +83,79 @@ print_version_correct() {
   echo "  ✓ $obj is installed at the required version ($ver)"
 }
 
-package_exists() {
+
+get_package_version() {
   local pkg=$1
-  rpm -q $pkg > /dev/null 2>&1
+  local ver
+
+  case "$OS_ID" in
+    centos)
+      ver=$(rpm -q --qf="%{VERSION}")
+      if [ $? -ne 0 ]; then
+        ver=''
+      fi
+      ;;
+    ubuntu)
+      ver=$(dpkg-query --show --showformat='${Version}' $pkg 2>/dev/null) # | cut -d ':' -f 2- | cut -d '-' -f 1)
+      if [ $? -ne 0 ]; then
+        ver=''
+      fi
+      ;;
+  esac
+  echo $ver
+}
+
+install_package() {
+  case "$OS_ID" in
+    centos)
+      echo "  Installing $pkg..."
+      yum -y -q install $pkg
+      ;;
+    ubuntu)
+      echo "  Installing $pkg..."
+      apt-get install -qq -y $pkg > /dev/null
+      ;;
+  esac
+}
+
+check_or_install_package() {
+  local pkg=$1
+  local pkg_version
+
+  pkg_version=$(get_package_version $pkg)
+  if [ x"$pkg_version" == x"" ]; then
+    install_package $pkg
+    pkg_version=$(get_package_version $pkg)
+  fi
+  echo "  ✓ $pkg: found $pkg-$pkg_version"
 }
 
 
-_install_packages() {
+install_package_list() {
   local pkg_list=$1
   local pkg
 
   for pkg in $pkg_list; do
-  check_pkg=$(rpm -q $pkg)
-  if [ $? -ne 0 ]; then
-    echo "  Installing $pkg..."
-    yum -y -q install $pkg
-  fi
-  echo "  ✓ $pkg: found $(rpm -q $pkg)"
+    check_or_install_package $pkg
   done
 }
 
 install_essentials() {
   echo "Installing essential packages..."
-  _install_packages "$ESSENTIAL_PACKAGES"
+  install_package_list "$ESSENTIAL_PACKAGES"
 }
 
 install_dependencies() {
   echo "Installing required dependencies..."
 
-  #TODO: Switch OS
-  _install_packages "$DEPENDENCIES_CENTOS"
+  case "$OS_ID" in
+    centos)
+      install_package_list "$DEPENDENCIES_CENTOS"
+      ;;
+    ubuntu)
+      install_package_list "$DEPENDENCIES_UBUNTU"
+      ;;
+  esac
 }
 
 
@@ -131,10 +165,21 @@ get_docker_version() {
 
 _install_docker() {
   # TODO: We might need to explicitly install containerd.io for newer versions
-  local docker_package_url=$DOCKER_URL_CENTOS'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+  local docker_package_url
+  local dst="$PWD/docker.deb"
 
-  # TODO: Switch according to the OS
-  yum install -y -q $docker_package_url 
+  case "$OS_ID" in
+    centos)
+      docker_package_url=$DOCKER_URL_CENTOS'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+      yum install -y -q $docker_package_url
+      ;;
+    ubuntu)
+      docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~ce~3-0~ubuntu_amd64.deb'
+      curl -s -L $docker_package_url -o $dst
+      dpkg --install $dst > /dev/null 2>&1
+      rm -rf $dst
+      ;;
+  esac
   start_docker
   get_docker_status
 }
@@ -147,13 +192,14 @@ install_docker() {
     _install_docker
   else
     docker_version=$(get_docker_version)
+    echo "docker version: "$docker_verision
     if ! verify_string_version_match $DOCKER_VERSION $docker_version; then
       print_version_mismatch 'docker' $DOCKER_VERSION $docker_version
       prompt_user_to_continue
-    else
-      print_version_correct 'docker' $docker_version
     fi
   fi
+  docker_version=$(get_docker_version)
+  print_version_correct 'docker' $docker_version
 }
 
 
@@ -164,7 +210,7 @@ get_kubectl_version() {
 _install_kubectl() {
   local dst=$(infer_binary_destination_from_PATH)"/kubectl"
 
-  curl -s -L $KUBECTL_URL_CENTOS -o $dst
+  curl -s -L $KUBECTL_URL -o $dst
   chmod +x $dst
 }
 
@@ -179,10 +225,10 @@ install_kubernetes() {
     if ! verify_string_version_match $KUBERNETES_VERSION $kubectl_version; then
       print_version_mismatch 'kubectl' $KUBERNETES_VERSION $kubectl_version
       prompt_user_to_continue
-    else
-      print_version_correct 'kubectl' $kubectl_version
     fi
   fi
+  kubectl_version=$(get_kubectl_version)
+  print_version_correct 'kubectl' $kubectl_version
 }
 
 
@@ -193,7 +239,7 @@ get_minikube_version() {
 _install_minikube() {
   local dst=$(infer_binary_destination_from_PATH)"/minikube"
 
-  curl -s -L $MINIKUBE_URL_CENTOS -o $dst
+  curl -s -L $MINIKUBE_URL -o $dst
   chmod +x $dst
 }
 
@@ -208,9 +254,9 @@ install_minikube() {
     if ! verify_string_version_match $MINIKUBE_VERSION $minikube_version; then
       print_version_mismatch 'minikube' $MINIKUBE_VERSION $minikube_version
       prompt_user_to_continue
-    else
-      print_version_correct 'minikube' $minikube_version
     fi
   fi
+  minikube_version=$(get_minikube_version)
+  print_version_correct 'minikube' $minikube_version
 }
 
