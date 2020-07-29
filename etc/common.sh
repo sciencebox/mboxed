@@ -41,7 +41,7 @@ guess_os() {
     exit 1
   fi
 
-  os_id=$(cat $os_release_file | grep "^ID=" | cut -d '=' -f 2- | tr '[:upper:]' '[:lower:]')
+  os_id=$(cat $os_release_file | grep "^ID=" | cut -d '=' -f 2- | tr '[:upper:]' '[:lower:]' | tr -d '"')
   os_version=$(cat $os_release_file | grep "^VERSION_ID=" | cut -d '=' -f 2- | tr -d '"')
   os_codename=$(cat $os_release_file | grep "^VERSION_CODENAME=" | cut -d '=' -f 2- | tr '[:upper:]' '[:lower:]')
   if [[ $supported_oses == *"$os_id"*  ]]; then
