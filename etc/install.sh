@@ -9,7 +9,8 @@ DEPENDENCIES_CENTOS='conntrack-tools procps-ng which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps'
 
 DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
-DOCKER_URL_CENTOS='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
+DOCKER_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
+DOCKER_URL_CENTOS8=$DOCKER_URL_CENTOS7  # For now (29/07/20), it is identical to the URL for CC7 and it works!
 DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 
 #KUBERNETES_VERSION --> See common.sh
@@ -170,7 +171,14 @@ _install_docker() {
 
   case "$OS_ID" in
     centos)
-      docker_package_url=$DOCKER_URL_CENTOS'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+      case "$OS_VERSION" in
+        7)
+          docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+          ;;
+        8)
+          docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+          ;;
+      esac
       yum install -y -q $docker_package_url
       ;;
     ubuntu)
