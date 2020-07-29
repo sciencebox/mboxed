@@ -93,6 +93,36 @@ configure_network() {
 }
 
 
+configure_selinux() {
+  local selinux_status
+
+  echo "Configuring SELinux..."
+  if [[ "$OS_ID" == "centos" ]] && [[ "$OS_VERSION" == "8" ]]; then
+    selinux_status=$(getenforce)
+    if [ "$selinux_status" == "Enforcing" ]; then
+      echo "WARNING: SELinux must be set to Permissive on CentOS 8."
+      prompt_user_to_continue
+      setenforce 0
+      echo "  ✓ SELinux set to Permissive (was $selinux_status)"
+    else
+      echo "  ✓ SELinux unmodifies (was already $selinux_status)"
+    fi
+  fi
+
+  #case "$OS_ID" in
+  #  centos)
+  #    case "$OS_VERSION" in
+  #      7)
+  #        ;;
+  #      8)
+  #        ;;
+  #    esac
+  #    ;;
+  #  ubuntu)
+  #    ;;
+  #esac
+}
+
 suggest_iptables_restore() {
   echo "WARNING: iptables configuration was modified when setting up ScienceBox."
   echo "  Consider restoring the previous configuraton with \`iptables-restore < iptables_<timestamp>.save\`."

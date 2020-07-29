@@ -7,8 +7,10 @@ source etc/deploy.sh
 
 # Preparation
 need_root
+guess_os
 #warn_about_interfence_eos_cvmfs
 configure_network
+configure_selinux
 
 # Get kuboxed
 get_git_repo $KUBOXED_GIT

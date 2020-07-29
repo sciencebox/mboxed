@@ -5,7 +5,7 @@
 # Required packages
 ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed'
 CONTAINER_PACKAGES='docker kubectl minikube'
-DEPENDENCIES_CENTOS='conntrack-tools procps-ng which'
+DEPENDENCIES_CENTOS='conntrack-tools libselinux-utils procps-ng which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps'
 
 DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
