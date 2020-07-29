@@ -90,7 +90,7 @@ get_package_version() {
 
   case "$OS_ID" in
     centos)
-      ver=$(rpm -q --qf="%{VERSION}")
+      ver=$(rpm -q --qf="%{VERSION}" $pkg)
       if [ $? -ne 0 ]; then
         ver=''
       fi
