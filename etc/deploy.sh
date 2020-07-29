@@ -370,18 +370,38 @@ _deploy_service() {
   fi
 }
 
+exec_in_container() {
+  local pod_name=$1
+  local cmd=$2
+  local pod_namespace=$(get_namespace)
+  local container_fullname
+
+  container_fullname=$(kubectl --namespace=$pod_namespace get pods --no-headers -o custom-columns=NAME:.metadata.name | grep -i ^$pod_name)
+  if [ x"$container_fullname" == x"" ]; then
+    echo "    ✗ Unable to find $pod_name to execute $cmd"
+  fi
+
+  kubectl --namespace=$pod_namespace exec -it $container_fullname $cmd > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "    ✗ Errors occurred while executing $cmd in $container_fullname"
+  else
+    echo "    ✓ $cmd in $container_fullname applied"
+  fi
+}
+
+
 deploy_services() {
   echo "Deploying services (might take some time):"
 
   # LDAP
   _deploy_service "ldap" "$KUBOXED_FOLDER/LDAP.yaml"
-  # TODO: Add the dummy users in LDAP
+  exec_in_container "ldap" "bash /root/addusers.sh"
 
   # EOS
   _deploy_service "eos-mgm" "$KUBOXED_FOLDER/eos-storage-mgm.yaml"
   # TODO: Actions to configure the MGM should go here
   sleep 30
-  echo "  ✓ eos-mgm configuration"
+  echo "    ✓ eos-mgm configuration"
   for no in $(seq 1 $EOS_FST_NUMBER)
   do
     _deploy_service "eos-fst$no" "$KUBOXED_FOLDER/eos-storage-fst$no.yaml"
