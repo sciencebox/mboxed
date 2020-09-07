@@ -26,7 +26,11 @@ create_persistent_storage
 start_minikube
 label_node
 
+# GPU Support
+enable_gpu_support
+
 # Deployment
 check_required_images
 create_namespace
 deploy_services
+

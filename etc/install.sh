@@ -7,6 +7,7 @@ ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed'
 CONTAINER_PACKAGES='docker kubectl minikube'
 DEPENDENCIES_CENTOS='conntrack-tools libselinux-utils procps-ng which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps'
+GPU_ESSENTIAL_PACKAGES='moreutils runc jq'
 
 DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
 DOCKER_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
@@ -18,6 +19,13 @@ KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNET
 
 MINIKUBE_VERSION='v1.12.0'
 MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
+
+#GPU PACKAGES VERSIONS
+NVIDIA_DOCKER_VERSION="2.4.0" 
+LIBNVIDIA_CONTAINER_VERSION="1.2.0"
+NVIDIA_CONTAINER_RUNTIME_VERSION="3.3.0"
+NVIDIA_CONTAINER_RUNTIME_HOOK_VERSION="1.4.0"
+NVIDIA_CONTAINER_TOOLKIT_VERSION="1.2.1"
 
 
 # Functions
@@ -41,6 +49,19 @@ warn_about_software_requirements() {
   done
 }
 
+# Print a warning about the required software on the host for GPU
+function warn_about_gpu_software_requirements {
+echo ""
+echo "The following software will be installed or updated for GPU support:"
+echo -e "\t- jq"
+echo -e "\t- runc"
+echo -e "\t- moreutils"
+echo -e "\t- nvidia-docker2"
+echo -e "\t- nvidia-container-runtime"
+echo -e "\t- libnvidia-container1"
+echo -e "\t- libnvidia-container-tools"
+echo -e "\t- nvidia-container-runtime-hook"
+}
 
 verify_package_version_match() {
   local pkg=$1
@@ -104,6 +125,18 @@ get_package_version() {
       ;;
   esac
   echo $ver
+}
+
+install_debs(){
+    pkgs=()
+    for pkg in ${pkgs_deb[@]}
+    do
+        pkg_name=$(echo $pkg | gawk -F '/' '{print $NF}')
+        wget $pkg -O /tmp/$pkg_name
+        pkgs+=(/tmp/$pkg_name)
+    done
+    apt install -y -qq ${pkgs[@]} > /dev/null
+    rm  -f ${pkgs[@]}
 }
 
 install_package() {
@@ -268,3 +301,78 @@ install_minikube() {
   print_version_correct 'minikube' $minikube_version
 }
 
+# ----- Install the required gpu software on the host ----- #
+install_gpu_software_base()
+{
+  case "$OS_ID" in
+    centos)
+      case "$OS_VERSION" in
+        7)
+        echo "Installing nvidia-docker2..."
+        yum install -y -q $GPU_ESSENTIAL_PACKAGES
+        yum install -y -q https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-runtime-"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1.x86_64.rpm \
+                https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container1-"$LIBNVIDIA_CONTAINER_VERSION"-1.x86_64.rpm \
+                https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container-tools-"$LIBNVIDIA_CONTAINER_VERSION"-1.x86_64.rpm \
+                https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-runtime-hook-"$NVIDIA_CONTAINER_RUNTIME_HOOK_VERSION"-2.x86_64.rpm \
+                https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-toolkit-"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-2.x86_64.rpm \
+                https://nvidia.github.io/nvidia-docker/centos7/x86_64/nvidia-docker2-"$NVIDIA_DOCKER_VERSION"-1.noarch.rpm 
+        ;;
+      esac
+      ;;
+    ubuntu)
+      case "$OS_VERSION" in
+        20.04)
+            echo "Installing nvidia-docker2..."
+             pkgs_deb=( https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-runtime_"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1_amd64.deb
+             https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container1_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
+             https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container-tools_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
+             https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-toolkit_"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-1_amd64.deb
+             https://nvidia.github.io/nvidia-docker/ubuntu20.04/amd64/nvidia-docker2_"$NVIDIA_DOCKER_VERSION"-1_all.deb )
+             install_debs pkgs_deb
+             ;;
+      esac
+  esac
+  #Setting up default runtime nvidia (required for kubernetes) https://github.com/NVIDIA/k8s-device-plugin#prerequisites 
+
+  jq   '{"default-runtime": "nvidia"} + .' /etc/docker/daemon.json  | sponge /etc/docker/daemon.json
+
+  echo "Restarting docker daemon with NVidia runtime..."
+  service docker restart
+
+  echo "Checking NVidia driver"
+  check_nvidia_driver
+}
+
+install_gpu_software()
+{
+  # Raise warning about GPU software installation (docker-ce should be installed)
+  warn_about_gpu_software_requirements
+
+  echo ""
+  read -r -p "Do you want to proceed with the gpu software installation [y/N] " response
+  case "$response" in
+    [yY]) 
+      echo "Installing required gpu software..."
+      install_gpu_software_base
+    ;;
+    *)
+      echo "Continuing without GPU support"
+    ;;
+  esac
+}
+
+### Check Nvidia kernel driver
+check_nvidia_driver()
+{
+    echo "Checking if the kernel driver is loaded "
+    if lsmod | grep "nvidia" &> /dev/null ; then
+      echo "==========================================================="
+      echo "NVidia kernel driver is loaded!"
+      echo "==========================================================="
+    else
+      echo "==========================================================="
+      echo "WARNING: NVidia kernel driver is not loaded!"
+      echo "GPU support will not work, configure your GPU driver first."
+      echo "==========================================================="
+    fi
+}

@@ -448,3 +448,16 @@ deploy_services() {
     #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
 }
 
+enable_gpu_support(){
+echo ""
+    read -r -p "Do you want enable gpu support [y/N] " response
+    case "$response" in
+      [yY]) 
+        echo "Installing the NVidia k8s-device-plugin..."
+        kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta4/nvidia-device-plugin.yml
+      ;;
+      *)
+        echo "Continuing without GPU support"
+      ;;
+    esac
+}
