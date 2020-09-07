@@ -12,6 +12,7 @@ prompt_user_to_continue
 install_essentials
 install_dependencies
 install_docker
+install_gpu_software
 install_kubernetes
 install_minikube
 
