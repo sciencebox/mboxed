@@ -346,12 +346,12 @@ prompt_user_for_gpu_software() {
   read -r -p "$message [y/N] " response
   case "$response" in
     [yY])
-      export GPU_SUPPORT=true
+      GPU_SUPPORT=true
       echo "  ✓ GPU software will be installed"
       return 0
       ;;
     *)
-      export GPU_SUPPORT=false
+      GPU_SUPPORT=false
       echo "  ✗ Continuing without GPU support"
       return 1
       ;;
