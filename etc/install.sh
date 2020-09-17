@@ -7,28 +7,46 @@ ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed'
 CONTAINER_PACKAGES='docker kubectl minikube'
 DEPENDENCIES_CENTOS='conntrack-tools libselinux-utils procps-ng which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps'
-GPU_ESSENTIAL_PACKAGES='moreutils runc jq'
+GPU_DEPENDENCIES='jq moreutils runc'
 
+# Docker
 DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
 DOCKER_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
 DOCKER_URL_CENTOS8=$DOCKER_URL_CENTOS7  # For now (29/07/20), it is identical to the URL for CC7 and it works!
 DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 
-#KUBERNETES_VERSION --> See common.sh
+# Kubernetes
+# For KUBERNETES_VERSION --> See common.sh
 KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
 
+# Minikube
 MINIKUBE_VERSION='v1.12.0'
 MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
 
-#GPU PACKAGES VERSIONS
-NVIDIA_DOCKER_VERSION="2.4.0" 
+# GPU packages versions
 LIBNVIDIA_CONTAINER_VERSION="1.2.0"
+NVIDIA_DOCKER_VERSION="2.4.0" 
 NVIDIA_CONTAINER_RUNTIME_VERSION="3.3.0"
-NVIDIA_CONTAINER_RUNTIME_HOOK_VERSION="1.4.0"
 NVIDIA_CONTAINER_TOOLKIT_VERSION="1.2.1"
 
+declare -A GPU_PKGs_CENTOS=( ["nvidia-container-runtime"]="https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-runtime-$NVIDIA_CONTAINER_RUNTIME_VERSION-1.x86_64.rpm"
+                             ["nvidia-container-toolkit"]="https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-toolkit-$NVIDIA_CONTAINER_TOOLKIT_VERSION-2.x86_64.rpm"
+                             ["libnvidia-container1"]="https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container1-$LIBNVIDIA_CONTAINER_VERSION-1.x86_64.rpm"
+                             ["libnvidia-container-tools"]="https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container-tools-$LIBNVIDIA_CONTAINER_VERSION-1.x86_64.rpm"
+                             ["nvidia-docker2"]="https://nvidia.github.io/nvidia-docker/centos7/x86_64/nvidia-docker2-$NVIDIA_DOCKER_VERSION-1.noarch.rpm" )
+declare -A GPU_PKGs_UBUNTU=( )
 
 # Functions
+# Print list of packages
+print_packages_list(){
+  local pkg_list=$1
+
+  for pkg in $(echo $pkg_list | tr ' ' '\n' | sort)
+  do
+    echo "  - $pkg"
+  done
+}
+
 # Warn about software that will be installed
 warn_about_software_requirements() {
   local pkg
@@ -43,24 +61,7 @@ warn_about_software_requirements() {
       pkg_list="$ESSENTIAL_PACKAGES $DEPENDENCIES_UBUNTU $CONTAINER_PACKAGES"
       ;;
   esac
-  for pkg in $(echo $pkg_list | tr ' ' '\n' | sort)
-  do
-    echo "  - $pkg"
-  done
-}
-
-# Print a warning about the required software on the host for GPU
-function warn_about_gpu_software_requirements {
-echo ""
-echo "The following software will be installed or updated for GPU support:"
-echo -e "\t- jq"
-echo -e "\t- runc"
-echo -e "\t- moreutils"
-echo -e "\t- nvidia-docker2"
-echo -e "\t- nvidia-container-runtime"
-echo -e "\t- libnvidia-container1"
-echo -e "\t- libnvidia-container-tools"
-echo -e "\t- nvidia-container-runtime-hook"
+  print_packages_list "$pkg_list"
 }
 
 verify_package_version_match() {
@@ -127,23 +128,30 @@ get_package_version() {
   echo $ver
 }
 
-install_debs(){
-    pkgs=()
-    for pkg in ${pkgs_deb[@]}
-    do
-        pkg_name=$(echo $pkg | gawk -F '/' '{print $NF}')
-        wget $pkg -O /tmp/$pkg_name
-        pkgs+=(/tmp/$pkg_name)
-    done
-    apt install -y -qq ${pkgs[@]} > /dev/null
-    rm  -f ${pkgs[@]}
-}
+# Refactor
+#install_debs(){
+#    pkgs=()
+#    for pkg in ${pkgs_deb[@]}
+#    do
+#        pkg_name=$(echo $pkg | gawk -F '/' '{print $NF}')
+#        wget $pkg -O /tmp/$pkg_name
+#        pkgs+=(/tmp/$pkg_name)
+#    done
+#    apt install -y -qq ${pkgs[@]} > /dev/null
+#    rm  -f ${pkgs[@]}
+#}
+#
+#install_from_debfile() {
+#  return
+#}
 
 install_package() {
+  local pkg=$1
+
   case "$OS_ID" in
     centos)
       echo "  Installing $pkg..."
-      yum -y -q install $pkg
+      yum install -y -q $pkg
       ;;
     ubuntu)
       echo "  Installing $pkg..."
@@ -152,25 +160,47 @@ install_package() {
   esac
 }
 
-check_or_install_package() {
-  local pkg=$1
+#check_package() {
+#  local pkg_name=$1
+#  local pkg_url=$2
+#  local pkg_version
+#
+#  # If the URL to download the package is not provided,
+#  # assume we can fetch it from a configured repo
+#  if [ x"$pkg_url" == x"" ]; then
+#    pkg_url=$pkg_name
+#  fi
+#  # TODO: This will not work with ubuntu
+#
+#  pkg_version=$(get_package_version $pkg_name)
+#  if [ x"$pkg_version" == x"" ]; then
+#    install_package $pkg
+#    pkg_version=$(get_package_version $pkg_name)
+#  fi
+#  echo "  ✓ $pkg_name: found $pkg_name-$pkg_version"
+#}
+
+check_package() {
+  local pkg_name=$1
   local pkg_version
 
-  pkg_version=$(get_package_version $pkg)
+  pkg_version=$(get_package_version $pkg_name)
   if [ x"$pkg_version" == x"" ]; then
-    install_package $pkg
-    pkg_version=$(get_package_version $pkg)
+    return 1
   fi
-  echo "  ✓ $pkg: found $pkg-$pkg_version"
+  echo "  ✓ $pkg_name: found $pkg_name-$pkg_version"
+  return 0
 }
-
 
 install_package_list() {
   local pkg_list=$1
   local pkg
 
   for pkg in $pkg_list; do
-    check_or_install_package $pkg
+    if ! check_package $pkg; then
+      install_package $pkg
+      check_package $pkg
+  fi
   done
 }
 
@@ -301,78 +331,71 @@ install_minikube() {
   print_version_correct 'minikube' $minikube_version
 }
 
-# ----- Install the required gpu software on the host ----- #
-install_gpu_software_base()
-{
-  case "$OS_ID" in
-    centos)
-      case "$OS_VERSION" in
-        7)
-        echo "Installing nvidia-docker2..."
-        yum install -y -q $GPU_ESSENTIAL_PACKAGES
-        yum install -y -q https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-runtime-"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1.x86_64.rpm \
-                https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container1-"$LIBNVIDIA_CONTAINER_VERSION"-1.x86_64.rpm \
-                https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container-tools-"$LIBNVIDIA_CONTAINER_VERSION"-1.x86_64.rpm \
-                https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-runtime-hook-"$NVIDIA_CONTAINER_RUNTIME_HOOK_VERSION"-2.x86_64.rpm \
-                https://nvidia.github.io/nvidia-container-runtime/centos7/x86_64/nvidia-container-toolkit-"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-2.x86_64.rpm \
-                https://nvidia.github.io/nvidia-docker/centos7/x86_64/nvidia-docker2-"$NVIDIA_DOCKER_VERSION"-1.noarch.rpm 
-        ;;
-      esac
+
+# ----- GPU Support ----- #
+# Warn about required software for GPU support
+warn_about_gpu_requirements() {
+echo "The following software will be installed for GPU support:"
+  print_packages_list "$GPU_DEPENDENCIES nvidia-docker2 nvidia-container-runtime libnvidia-container1 libnvidia-container-tools nvidia-container-runtime-hook"
+}
+
+prompt_user_for_gpu_software() {
+  if [ x"$message" == x"" ]; then
+    message='Do you want to continue with GPU support?'
+  fi
+  read -r -p "$message [y/N] " response
+  case "$response" in
+    [yY])
+      export GPU_SUPPORT=true
+      echo "  ✓ GPU software will be installed"
+      return 0
       ;;
-    ubuntu)
-      case "$OS_VERSION" in
-        20.04)
-            echo "Installing nvidia-docker2..."
-             pkgs_deb=( https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-runtime_"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1_amd64.deb
-             https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container1_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
-             https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container-tools_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
-             https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-toolkit_"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-1_amd64.deb
-             https://nvidia.github.io/nvidia-docker/ubuntu20.04/amd64/nvidia-docker2_"$NVIDIA_DOCKER_VERSION"-1_all.deb )
-             install_debs pkgs_deb
-             ;;
-      esac
+    *)
+      export GPU_SUPPORT=false
+      echo "  ✗ Continuing without GPU support"
+      return 1
+      ;;
   esac
-  #Setting up default runtime nvidia (required for kubernetes) https://github.com/NVIDIA/k8s-device-plugin#prerequisites 
-
-  jq   '{"default-runtime": "nvidia"} + .' /etc/docker/daemon.json  | sponge /etc/docker/daemon.json
-
-  echo "Restarting docker daemon with NVidia runtime..."
-  service docker restart
-
-  echo "Checking NVidia driver"
-  check_nvidia_driver
 }
 
 install_gpu_software()
 {
-  # Raise warning about GPU software installation (docker-ce should be installed)
-  warn_about_gpu_software_requirements
+  local pkg_name
+  local pkg_url
+  local pkg_url_list
 
-  echo ""
-  read -r -p "Do you want to proceed with the gpu software installation [y/N] " response
-  case "$response" in
-    [yY]) 
-      echo "Installing required gpu software..."
-      install_gpu_software_base
-    ;;
-    *)
-      echo "Continuing without GPU support"
-    ;;
+  if ! $GPU_SUPPORT; then
+    return
+  fi
+
+  case "$OS_ID" in
+    centos)
+      case "$OS_VERSION" in
+        7)
+          echo "Installing dependencies for GPU support..."
+          install_package_list "$GPU_DEPENDENCIES"
+          echo "Installing nvidia-docker2 (and related dependencies)..."
+          yum install -y -q "${GPU_PKGs_CENTOS[@]}" > /dev/null 2>&1
+          for pkg_name in "${!GPU_PKGs_CENTOS[@]}"
+          do
+            check_package $pkg_name
+          done
+          ;;
+      esac
+      ;;
+    # TODO: Check it works for ubuntu
+    ubuntu)
+      case "$OS_VERSION" in
+        20.04)
+          echo "Installing nvidia-docker2 (and related dependencies)..."
+          pkgs_deb=( https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-runtime_"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1_amd64.deb
+            https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container1_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
+            https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container-tools_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
+            https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-toolkit_"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-1_amd64.deb
+            https://nvidia.github.io/nvidia-docker/ubuntu20.04/amd64/nvidia-docker2_"$NVIDIA_DOCKER_VERSION"-1_all.deb )
+          install_debs pkgs_deb
+          ;;
+      esac
   esac
 }
 
-### Check Nvidia kernel driver
-check_nvidia_driver()
-{
-    echo "Checking if the kernel driver is loaded "
-    if lsmod | grep "nvidia" &> /dev/null ; then
-      echo "==========================================================="
-      echo "NVidia kernel driver is loaded!"
-      echo "==========================================================="
-    else
-      echo "==========================================================="
-      echo "WARNING: NVidia kernel driver is not loaded!"
-      echo "GPU support will not work, configure your GPU driver first."
-      echo "==========================================================="
-    fi
-}
