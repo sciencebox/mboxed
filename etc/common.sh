@@ -208,6 +208,23 @@ check_docker_image_exists_locally() {
 }
 
 
+prompt_user_for_gpu_support() {
+  read -r -p "Do you want to enable GPU support? [y/N] " response
+  case "$response" in
+    [yY])
+      GPU_SUPPORT=true
+      return 0
+      ;;
+    *)
+      GPU_SUPPORT=false
+      echo "  ✓ Continuing without GPU support"
+      return 1
+      ;;
+  esac
+}
+
+
+
 ##  # Infer which package provides the command
 ##  cmd_fullpath=$(get_command_fullpath $cmd)
 ##

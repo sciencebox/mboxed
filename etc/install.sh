@@ -335,31 +335,14 @@ install_minikube() {
 # ----- GPU Support ----- #
 # Warn about required software for GPU support
 warn_about_gpu_requirements() {
-echo "The following software will be installed for GPU support:"
+echo "The following software is required for GPU support:"
   print_packages_list "$GPU_DEPENDENCIES nvidia-docker2 nvidia-container-runtime libnvidia-container1 libnvidia-container-tools nvidia-container-runtime-hook"
-}
-
-prompt_user_for_gpu_software() {
-  if [ x"$message" == x"" ]; then
-    message='Do you want to continue with GPU support?'
-  fi
-  read -r -p "$message [y/N] " response
-  case "$response" in
-    [yY])
-      GPU_SUPPORT=true
-      echo "  ✓ GPU software will be installed"
-      return 0
-      ;;
-    *)
-      GPU_SUPPORT=false
-      echo "  ✗ Continuing without GPU support"
-      return 1
-      ;;
-  esac
 }
 
 install_gpu_software()
 {
+  local docker_daemon_config_file='/etc/docker/daemon.json'
+  local docker_daemon_save_file=$PWD"/docker_daemon.json_"$(date +%s)".save"
   local pkg_name
   local pkg_url
   local pkg_url_list
@@ -368,13 +351,22 @@ install_gpu_software()
     return
   fi
 
+  # Backup Docker daemon configuration first
+  echo "Saving docker daemon configuration... (nvidia-docker2 might change it)"
+  if [ ! -f $docker_daemon_config_file ]; then
+    echo "  ✓ Docker daemon configuration file not found. Consider removing $docker_daemon_config_file when removing ScienceBox."
+  else
+    cp $docker_daemon_config_file $docker_daemon_save_file
+    echo "  ✓ Docker daemon configuration saved to $docker_daemon_save_file."
+  fi
+
   case "$OS_ID" in
     centos)
       case "$OS_VERSION" in
         7)
           echo "Installing dependencies for GPU support..."
           install_package_list "$GPU_DEPENDENCIES"
-          echo "Installing nvidia-docker2 (and related dependencies)..."
+          echo "Installing nvidia-docker2 (and related packages)..."
           yum install -y -q "${GPU_PKGs_CENTOS[@]}" > /dev/null 2>&1
           for pkg_name in "${!GPU_PKGs_CENTOS[@]}"
           do
