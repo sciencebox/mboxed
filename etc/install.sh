@@ -224,7 +224,17 @@ install_dependencies() {
 
 
 get_docker_version() {
-  echo $(docker version --format '{{.Server.Version}}' | cut -d '-' -f 1)
+  local docker_version
+
+  if systemctl status docker > /dev/null 2>&1; then
+    docker_version=$(docker version --format '{{.Server.Version}}' | cut -d '-' -f 1)
+  else
+    docker_version=$(get_package_version 'docker-ce')
+    if [ $(echo $docker_version | cut -c 8-) == ".ce" ]; then
+      docker_version=$(echo $docker_version | cut -c -7)
+    fi
+  fi
+  echo $docker_version
 }
 
 _install_docker() {
