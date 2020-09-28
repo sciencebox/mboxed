@@ -12,5 +12,7 @@ prompt_user_to_continue
 # Stop ScienceBox
 stop_minikube
 
-# Restore iptables config if the user wants
+# Restore previous config if the user wants
 suggest_iptables_restore
+suggest_docker_daemon_restore
+

@@ -23,5 +23,7 @@ delete_images
 # Delete stored configs, users' files, etc.
 delete_persistent_storage
 
-# Restore iptables config if the user wants
+# Restore previous config if the user wants
 suggest_iptables_restore
+suggest_docker_daemon_restore
+
