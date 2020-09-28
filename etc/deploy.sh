@@ -56,43 +56,6 @@ configure_sysctl_param() {
 }
 
 
-configure_network() {
-  local iptables_save_file=$PWD"/iptables_"$(date +%s)".save"
-  local netconf_list='net.ipv4.conf.all.forwarding net.ipv6.conf.all.forwarding net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables'
-  local netconf
-
-  echo "WARNING: iptables and IP forwarding rules need to be modified."
-  echo "  - The existing iptables configuration will be saved to file ($iptables_save_file) in order to restore it, if needed."
-  echo "  - Changes to IP forwarding rules will be reported to roll them back, if needed."
-  echo "WARNING: Docker needs to be restarted to subsequently to the network changes."
-  echo "  - The Docker configuration will be left untouched."
-  echo "  - Running containers will temporarily stop while the Docker server restarts."
-  prompt_user_to_continue
-
-  echo "Configuring network forwarding parameters..."
-  for netconf in $netconf_list
-  do
-    configure_sysctl_param $netconf
-  done
-
-  echo "Configuring iptables..."
-  iptables-save > $iptables_save_file
-  if [ $? -eq 0 ]; then
-    echo "  ✓ iptables configuration saved to $iptables_save_file."
-    #echo "  Restore it with \`iptables-restore < $iptables_save_file\` if needed"
-  else
-    echo "  ✗ Error saving iptables configuration to $iptables_save_file"
-    echo "  Dumping iptable configuration now:"
-    iptables-save
-  fi
-  iptables --flush
-  #iptables --table nat --flush
-
-  echo "Restarting Docker..."
-  restart_docker
-}
-
-
 configure_selinux() {
   local selinux_status
 
@@ -105,7 +68,7 @@ configure_selinux() {
       setenforce 0
       echo "  ✓ SELinux set to Permissive (was $selinux_status)"
     else
-      echo "  ✓ SELinux unmodifies (was already $selinux_status)"
+      echo "  ✓ SELinux unmodified (was already $selinux_status)"
     fi
   fi
 
@@ -123,11 +86,110 @@ configure_selinux() {
   #esac
 }
 
+
+configure_network() {
+  local iptables_save_file=$PWD"/iptables_"$(date +%s)".save"
+  local netconf_list='net.ipv4.conf.all.forwarding net.ipv6.conf.all.forwarding net.bridge.bridge-nf-call-iptables net.bridge.bridge-nf-call-ip6tables'
+  local netconf
+
+  echo "Configuring networking..."
+  echo "  WARNING: iptables and IP forwarding rules need to be modified."
+  echo "    - The existing iptables configuration will be saved to file ($iptables_save_file) in order to restore it, if needed."
+  echo "    - Changes to IP forwarding rules will be reported to roll them back, if needed."
+  echo "    - The Docker daemon needs to be restarted. Running containers will temporarily stop while the Docker server restarts."
+  prompt_user_to_continue
+
+  echo "Configuring network forwarding parameters..."
+  for netconf in $netconf_list
+  do
+    configure_sysctl_param $netconf
+  done
+
+  echo "Configuring iptables..."
+  iptables-save > $iptables_save_file
+  if [ $? -eq 0 ]; then
+    echo "  ✓ iptables configuration saved to $iptables_save_file."
+  else
+    echo "  ✗ Error saving iptables configuration to $iptables_save_file"
+    echo "  Dumping current iptable configuration on screen:"
+    iptables-save
+  fi
+  iptables --flush
+  #iptables --table nat --flush
+}
+
+
+# Note: The nvidia-docker2 package does he configuration of /etc/docker/daemon.json on its own.
+#configure_gpu_support() {
+#  local docker_daemon_config_file='/etc/docker/daemon.json'
+#  local docker_daemon_save_file=$PWD"/docker_daemon.json_"$(date +%s)".save"
+#  local docker_daemon_working_file=$PWD"/docker_daemon.json"
+#  local docker_default_runtime
+#
+#  if ! prompt_user_for_gpu_support; then
+#    return
+#  fi
+#
+#  echo "Configuring Docker daemon for GPU support..."
+#
+#  # daemon.json does not exist --> Just create it
+#  if [ ! -f $docker_daemon_config_file ]; then
+#    echo "  ✓ Creating $docker_daemon_config_file (did not exist)"
+#    cat > $docker_daemon_config_file <<EOF
+#{
+#  "default-runtime": "nvidia",
+#}
+#EOF
+#  else
+#    # daemon.json exists --> Parse the file for the default-runtime
+#    docker_default_runtime=$(jq --monochrome-output '."default-runtime"' $docker_daemon_config_file | tr -d '"')
+#    if [ $docker_default_runtime == "null" ]; then
+#      # default-runtime not specified --> Add it to daemon.json file
+#      cp $docker_daemon_config_file $docker_daemon_save_file.
+#      echo "  ✓ Docker daemon configuration saved to $docker_daemon_save_file."
+#      echo "  ✓ Setting default-runtime to nvidia (was not defined)"
+#      jq '{"default-runtime": "nvidia"} + .' $docker_daemon_config_file > $docker_daemon_working_file && \
+#      mv $docker_daemon_working_file $docker_daemon_config_file
+#    else
+#      # TODO: We should overwrite the current setting
+#      echo "TBI"
+#    fi
+#    rm -f $docker_daemon_working_file
+#  fi
+#}
+configure_gpu_support() {
+  if ! prompt_user_for_gpu_support; then
+    return
+  fi
+  check_nvidia_driver
+}
+
+
+### Check Nvidia kernel driver
+check_nvidia_driver()
+{
+    echo "Checking if the nvidia kernel driver is loaded..."
+    if lsmod | grep "nvidia" &> /dev/null ; then
+      echo "  ✓ nvidia kernel driver is loaded"
+    else
+      echo "  ✗ nvidia kernel driver is not loaded. Please configure your GPU driver first."
+      echo "  ✗ GPU support disabled."
+      GPU_SUPPORT=false
+    fi
+}
+
+
+
 suggest_iptables_restore() {
   echo "WARNING: iptables configuration was modified when setting up ScienceBox."
   echo "  Consider restoring the previous configuraton with \`iptables-restore < iptables_<timestamp>.save\`."
   echo "  If you ran the set up script multiple times, you should like restore the oldest file."
+}
 
+suggest_docker_daemon_restore() {
+  echo "WARNING: If GPU support was enabled, the docker daemon configuration has been modified."
+  echo "  Consider restoring the previous configuraton (if any) by moving docker_daemon.json_<timestamp>.save to /etc/docker/daemon.json"
+  echo "  If you ran the set up script multiple times, you should like restore the oldest file."
 }
 
 
@@ -201,8 +263,7 @@ get_persistent_storage_paths() {
   # - /mnt/ldap/userdb
   # - /var/kubeVolumes (subolders will be automatically created)
 
-  # TODO:
-  #   By now, they are inferred from the YAML files, but this will disappear with Helm
+  # TODO: By now, they are inferred from the YAML files, but this will disappear with Helm
   #
   local folders_list
   folders_list=$(cat $KUBOXED_FOLDER/*.yaml | grep -i "hostPath:" -A 2 | grep -i -w "type: Directory" -B 1 | grep -i "path: " | awk '{print $NF}')
@@ -446,18 +507,11 @@ deploy_services() {
   #TODO: Check 
     #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i 's/"0.0.0.0"/"127.0.0.1"/g' /srv/jupyterhub/jupyterhub_config.py
     #sudo kubectl exec -n boxed $SWAN_PODNAME -- sed -i '/8080/a hub_ip='"$HOSTNAME"'' /srv/jupyterhub/jupyterhub_config.py
+
+  # GPU Support
+  if $GPU_SUPPORT; then
+    echo "Installing the nvidia k8s-device-plugin..."
+    _deploy_service "nvidia-k8s-device-plugin" https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta4/nvidia-device-plugin.yml
+  fi
 }
 
-enable_gpu_support(){
-echo ""
-    read -r -p "Do you want enable gpu support [y/N] " response
-    case "$response" in
-      [yY]) 
-        echo "Installing the NVidia k8s-device-plugin..."
-        kubectl create -f https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/1.0.0-beta4/nvidia-device-plugin.yml
-      ;;
-      *)
-        echo "Continuing without GPU support"
-      ;;
-    esac
-}
