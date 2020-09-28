@@ -9,9 +9,15 @@ source etc/deploy.sh
 need_root
 guess_os
 #warn_about_interfence_eos_cvmfs
-configure_network
 configure_selinux
+configure_network
+configure_gpu_support
 
+# Restart Docker after network (and GPU) changes
+echo "Restarting Docker..."
+restart_docker
+exit
+ 
 # Get kuboxed
 get_git_repo $KUBOXED_GIT
 prepare_kuboxed
@@ -25,9 +31,6 @@ create_persistent_storage
 # Bootstrap Minikube 
 start_minikube
 label_node
-
-# GPU Support
-enable_gpu_support
 
 # Deployment
 check_required_images
