@@ -34,7 +34,12 @@ declare -A GPU_PKGs_CENTOS=( ["nvidia-container-runtime"]="https://nvidia.github
                              ["libnvidia-container1"]="https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container1-$LIBNVIDIA_CONTAINER_VERSION-1.x86_64.rpm"
                              ["libnvidia-container-tools"]="https://nvidia.github.io/libnvidia-container/centos7/x86_64/libnvidia-container-tools-$LIBNVIDIA_CONTAINER_VERSION-1.x86_64.rpm"
                              ["nvidia-docker2"]="https://nvidia.github.io/nvidia-docker/centos7/x86_64/nvidia-docker2-$NVIDIA_DOCKER_VERSION-1.noarch.rpm" )
-declare -A GPU_PKGs_UBUNTU=( )
+declare -A GPU_PKGs_UBUNTU=( ["nvidia-container-runtime"]="https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-runtime_"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1_amd64.deb"
+                             ["nvidia-container-toolkit"]="https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-toolkit_"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-1_amd64.deb"
+                             ["libnvidia-container1"]="https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container1_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb"
+                             ["libnvidia-container-tools"]="https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container-tools_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb"
+                             ["nvidia-docker2"]="https://nvidia.github.io/nvidia-docker/ubuntu20.04/amd64/nvidia-docker2_"$NVIDIA_DOCKER_VERSION"-1_all.deb"
+)
 
 # Functions
 # Print list of packages
@@ -128,23 +133,6 @@ get_package_version() {
   echo $ver
 }
 
-# Refactor
-#install_debs(){
-#    pkgs=()
-#    for pkg in ${pkgs_deb[@]}
-#    do
-#        pkg_name=$(echo $pkg | gawk -F '/' '{print $NF}')
-#        wget $pkg -O /tmp/$pkg_name
-#        pkgs+=(/tmp/$pkg_name)
-#    done
-#    apt install -y -qq ${pkgs[@]} > /dev/null
-#    rm  -f ${pkgs[@]}
-#}
-#
-#install_from_debfile() {
-#  return
-#}
-
 install_package() {
   local pkg=$1
 
@@ -166,6 +154,15 @@ install_package() {
   esac
 }
 
+install_deb() {
+  local pkg_url=$1
+  local pkg_deb='/tmp/to_install.deb'
+
+  curl -s -L $pkg_url -o $pkg_deb
+  dpkg --install $pkg_deb > /dev/null 2>&1
+  rm -rf $pkg_deb
+}
+
 #check_package() {
 #  local pkg_name=$1
 #  local pkg_url=$2
@@ -176,7 +173,6 @@ install_package() {
 #  if [ x"$pkg_url" == x"" ]; then
 #    pkg_url=$pkg_name
 #  fi
-#  # TODO: This will not work with ubuntu
 #
 #  pkg_version=$(get_package_version $pkg_name)
 #  if [ x"$pkg_version" == x"" ]; then
@@ -246,7 +242,7 @@ get_docker_version() {
 _install_docker() {
   # TODO: We might need to explicitly install containerd.io for newer versions
   local docker_package_url
-  local dst="$PWD/docker.deb"
+  local dst="/tmp/docker.deb"
 
   case "$OS_ID" in
     centos)
@@ -362,6 +358,7 @@ install_gpu_software()
   local pkg_name
   local pkg_url
   local pkg_url_list
+  local pkg_local_deb
 
   if ! $GPU_SUPPORT; then
     return
@@ -391,17 +388,17 @@ install_gpu_software()
           ;;
       esac
       ;;
-    # TODO: Check it works for ubuntu
     ubuntu)
       case "$OS_VERSION" in
-        20.04)
+        18.04|18.10|19.04|19.10|20.04)
+           echo "Installing dependencies for GPU support..."
+          install_package_list "$GPU_DEPENDENCIES"
           echo "Installing nvidia-docker2 (and related dependencies)..."
-          pkgs_deb=( https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-runtime_"$NVIDIA_CONTAINER_RUNTIME_VERSION"-1_amd64.deb
-            https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container1_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
-            https://nvidia.github.io/libnvidia-container/stable/ubuntu20.04/amd64/libnvidia-container-tools_"$LIBNVIDIA_CONTAINER_VERSION"-1_amd64.deb
-            https://nvidia.github.io/nvidia-container-runtime/ubuntu20.04/amd64/nvidia-container-toolkit_"$NVIDIA_CONTAINER_TOOLKIT_VERSION"-1_amd64.deb
-            https://nvidia.github.io/nvidia-docker/ubuntu20.04/amd64/nvidia-docker2_"$NVIDIA_DOCKER_VERSION"-1_all.deb )
-          install_debs pkgs_deb
+	  for pkg_name in "${!GPU_PKGs_UBUNTU[@]}"
+	  do
+            install_deb ${GPU_PKGs_UBUNTU["$pkg_name"]}
+            check_package $pkg_name
+	  done
           ;;
       esac
   esac
