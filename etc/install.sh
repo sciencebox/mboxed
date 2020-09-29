@@ -124,7 +124,7 @@ get_package_version() {
       fi
       ;;
     ubuntu)
-      ver=$(dpkg-query --show --showformat='${Version}' $pkg 2>/dev/null) # | cut -d ':' -f 2- | cut -d '-' -f 1)
+      ver=$(dpkg-query --show --showformat='${Status}|${Version}' $pkg 2>/dev/null | grep "^install ok installed" | cut -d '|' -f 2-)
       if [ $? -ne 0 ]; then
         ver=''
       fi
@@ -353,9 +353,8 @@ install_gpu_software()
   local docker_daemon_config_file='/etc/docker/daemon.json'
   local docker_daemon_save_file=$PWD"/docker_daemon.json_"$(date +%s)".save"
   local pkg_name
-  local pkg_url
-  local pkg_url_list
-  local pkg_local_deb
+  local pkg_local
+  local pkg_local_list
 
   if ! $GPU_SUPPORT; then
     return
@@ -390,11 +389,25 @@ install_gpu_software()
         18.04|18.10|19.04|19.10|20.04)
            echo "Installing dependencies for GPU support..."
           install_package_list "$GPU_DEPENDENCIES"
-          echo "Installing nvidia-docker2 (and related dependencies)..."
+	  echo "Installing nvidia-docker2 (and related dependencies)..."
+	  # Get packages first
+	  for pkg_name in "${!GPU_PKGs_UBUNTU[@]}"
+          do
+            pkg_local="/tmp/$pkg_name.deb"
+	    pkg_local_list=$(echo $pkg_local_list $pkg_local)
+            curl -s -L ${GPU_PKGs_UBUNTU["$pkg_name"]} -o $pkg_local
+          done
+	  # Install all of them in one go
+	  dpkg --install $pkg_local_list > /dev/null 2>&1
+	  # Check
 	  for pkg_name in "${!GPU_PKGs_UBUNTU[@]}"
 	  do
-            install_deb ${GPU_PKGs_UBUNTU["$pkg_name"]}
             check_package $pkg_name
+	  done
+	  # Clean-up
+	  for pkg_name in $pkg_local_list
+	  do
+            rm -rf $pkg_name
 	  done
           ;;
       esac
