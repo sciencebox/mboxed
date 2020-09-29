@@ -151,11 +151,17 @@ install_package() {
   case "$OS_ID" in
     centos)
       echo "  Installing $pkg..."
-      yum install -y -q $pkg
+      yum install -y -q $pkg > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "  ✗ Error installing $pkg "
+      fi
       ;;
     ubuntu)
       echo "  Installing $pkg..."
-      apt-get install -qq -y $pkg > /dev/null
+      apt-get install -qq -y $pkg > /dev/null 2>&1
+      if [ $? -ne 0 ]; then
+        echo "  ✗ Error installing $pkg "
+      fi
       ;;
   esac
 }
