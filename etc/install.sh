@@ -242,7 +242,6 @@ get_docker_version() {
 _install_docker() {
   # TODO: We might need to explicitly install containerd.io for newer versions
   local docker_package_url
-  local dst="/tmp/docker.deb"
 
   case "$OS_ID" in
     centos)
@@ -258,9 +257,7 @@ _install_docker() {
       ;;
     ubuntu)
       docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~ce~3-0~ubuntu_amd64.deb'
-      curl -s -L $docker_package_url -o $dst
-      dpkg --install $dst > /dev/null 2>&1
-      rm -rf $dst
+      install_deb $docker_package_url
       ;;
   esac
   start_docker
