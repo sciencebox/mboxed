@@ -3,7 +3,7 @@
 
 
 # Required packages
-ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed'
+ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed tar'
 CONTAINER_PACKAGES='docker kubectl minikube'
 DEPENDENCIES_CENTOS='conntrack-tools libselinux-utils procps-ng which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps'
@@ -22,6 +22,10 @@ KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNET
 # Minikube
 MINIKUBE_VERSION='v1.12.0'
 MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
+
+# Helm
+HELM_VERSION='v3.3.3'
+HELM_URL="https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz"
 
 # GPU packages versions
 LIBNVIDIA_CONTAINER_VERSION="1.2.0"
@@ -338,6 +342,40 @@ install_minikube() {
   fi
   minikube_version=$(get_minikube_version)
   print_version_correct 'minikube' $minikube_version
+}
+
+get_helm_version() {
+  echo $(helm version --short | cut -d '+' -f 1)
+}
+
+_install_helm() {
+  local tmp_fld='/tmp/helm'
+  local tmp_dst="$tmp_fld/helm.tar.gz"
+  local dst=$(infer_binary_destination_from_PATH)"/helm"
+
+  mkdir -p $tmp_fld
+  curl -s -L $HELM_URL -o $tmp_dst
+  tar -xf $tmp_dst -C $tmp_fld
+  cp $tmp_fld/linux-amd64/helm $dst
+  rm -rf $tmp_fld
+  chmod +x $dst
+}
+
+install_helm() {
+  local helm_version
+
+  echo "Installing Helm..."
+  if ! command_exists 'helm'; then
+    _install_helm
+  else
+    helm_version=$(get_helm_version)
+    if ! verify_string_version_match $HELM_VERSION $helm_version; then
+      print_version_mismatch 'minikube' $HELM_VERSION $helm_version
+      prompt_user_to_continue
+    fi
+  fi
+  helm_version=$(get_helm_version)
+  print_version_correct 'helm' $helm_version
 }
 
 
