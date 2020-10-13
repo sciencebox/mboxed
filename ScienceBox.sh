@@ -17,22 +17,30 @@ configure_gpu_support
 echo "Restarting Docker..."
 restart_docker
  
-# Get kuboxed
-get_git_repo $KUBOXED_GIT
-prepare_kuboxed
+# Get helm charts for SWAN
+get_git_repo $HELM_CHARTS_SWAN
 
-# Get Docker images
-pre_pull_images
+## # Get kuboxed
+## get_git_repo $KUBOXED_GIT
+## prepare_kuboxed
+
+## # Get Docker images
+## pre_pull_images
 
 # Prepare persistent storage
 create_persistent_storage
 
 # Bootstrap Minikube 
-start_minikube
-label_node
+#start_minikube
+#label_node
 
-# Deployment
-check_required_images
-create_namespace
-deploy_services
+# Configure Helm
+configure_helm
 
+## # Deployment
+## check_required_images
+## create_namespace
+## #deploy_services
+
+# Deploy services with Helm charts
+#TODO: deploy_helm_charts

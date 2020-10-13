@@ -10,6 +10,9 @@ MINIKUBE_NODE_LABEL='minikube'
 KUBOXED_GIT='https://github.com/cernbox/kuboxed.git'
 KUBOXED_FOLDER='kuboxed'
 
+# Helm Charts
+HELM_CHARTS_SWAN='https://gitlab.cern.ch/swan/k8s/swank8s'
+
 # EOS
 EOS_FST_NUMBER=4
 
@@ -164,8 +167,6 @@ configure_gpu_support() {
   check_nvidia_driver
 }
 
-
-### Check Nvidia kernel driver
 check_nvidia_driver()
 {
     echo "Checking if the nvidia kernel driver is loaded..."
@@ -179,6 +180,10 @@ check_nvidia_driver()
 }
 
 
+configure_helm() {
+#TODO: Check this better
+  helm init
+}
 
 suggest_iptables_restore() {
   echo "WARNING: iptables configuration was modified when setting up ScienceBox."
