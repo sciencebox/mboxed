@@ -24,8 +24,8 @@ MINIKUBE_VERSION='v1.12.0'
 MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
 
 # Helm
-#HELM_VERSION='v3.3.3'
-HELM_VERSION='v2.16.12'
+HELM_VERSION='v3.3.3'
+#HELM_VERSION='v2.16.12'
 HELM_URL="https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz"
 
 # GPU packages versions
@@ -346,13 +346,11 @@ install_minikube() {
 }
 
 get_helm_version() {
-  # echo $(helm version --short | cut -d '+' -f 1) # Helm v3
-  echo $(helm version --short 2> /dev/null | grep '^Client:' | cut -d ' ' -f 2 | cut -d '+' -f 1)
+  echo $(helm version --short | cut -d '+' -f 1) # Helm v3
+  #echo $(helm version --short 2> /dev/null | grep '^Client:' | cut -d ' ' -f 2 | cut -d '+' -f 1) # Helm v2
 }
 
-_install_helm() {
-  #TODO: With Helm v3+, tiller is removed (single binary in helm)
-
+_install_helm_v2() {
   local tmp_fld='/tmp/helm'
   local tmp_dst="$tmp_fld/helm.tar.gz"
   local dst_helm=$(infer_binary_destination_from_PATH)"/helm"
@@ -368,16 +366,29 @@ _install_helm() {
   chmod +x $dst_tiller
 }
 
+_install_helm_v3() {
+  local tmp_fld='/tmp/helm'
+  local tmp_dst="$tmp_fld/helm.tar.gz"
+  local dst_helm=$(infer_binary_destination_from_PATH)"/helm"
+
+  mkdir -p $tmp_fld
+  curl -s -L $HELM_URL -o $tmp_dst
+  tar -xf $tmp_dst -C $tmp_fld
+  cp $tmp_fld/linux-amd64/helm $dst_helm
+  rm -rf $tmp_fld
+  chmod +x $dst_helm
+}
+
 install_helm() {
   local helm_version
 
   echo "Installing Helm..."
   if ! command_exists 'helm'; then
-    _install_helm
+    _install_helm_v3
   else
     helm_version=$(get_helm_version)
     if ! verify_string_version_match $HELM_VERSION $helm_version; then
-      print_version_mismatch 'minikube' $HELM_VERSION $helm_version
+      print_version_mismatch 'helm' $HELM_VERSION $helm_version
       prompt_user_to_continue
     fi
   fi
