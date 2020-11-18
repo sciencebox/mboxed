@@ -17,8 +17,8 @@ configure_gpu_support
 echo "Restarting Docker..."
 restart_docker
  
-# Get helm charts for SWAN
-get_git_repo $HELM_CHARTS_SWAN
+## Get helm charts for SWAN
+#get_git_repo $HELM_CHARTS_SWAN
 
 ## # Get kuboxed
 ## get_git_repo $KUBOXED_GIT
@@ -31,11 +31,11 @@ get_git_repo $HELM_CHARTS_SWAN
 create_persistent_storage
 
 # Bootstrap Minikube 
-#start_minikube
+start_minikube
 #label_node
 
-# Configure Helm
-configure_helm
+## Configure Helm
+#configure_helm	# Not needed with Helm v3
 
 ## # Deployment
 ## check_required_images
