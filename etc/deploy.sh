@@ -11,6 +11,7 @@ KUBOXED_GIT='https://github.com/cernbox/kuboxed.git'
 KUBOXED_FOLDER='kuboxed'
 
 # Helm Charts
+HELP_CHARTS_EOS='https://gitlab.cern.ch/eos/eos-charts.git'
 HELM_CHARTS_SWAN='https://gitlab.cern.ch/swan/k8s/swank8s.git'
 
 # EOS
