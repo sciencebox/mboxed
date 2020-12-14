@@ -17,12 +17,11 @@ configure_gpu_support
 echo "Restarting Docker..."
 restart_docker
  
-## Get helm charts for SWAN
-#get_git_repo $HELM_CHARTS_SWAN
+# Get Helm charts for EOS
+#get_git_repo $HELM_CHARTS_EOS
 
-## # Get kuboxed
-## get_git_repo $KUBOXED_GIT
-## prepare_kuboxed
+# Get Helm charts for SWAN
+#get_git_repo $HELM_CHARTS_SWAN
 
 ## # Get Docker images
 ## pre_pull_images
@@ -44,3 +43,17 @@ start_minikube
 
 # Deploy services with Helm charts
 #TODO: deploy_helm_charts
+
+echo "
+
+
+The eos-chart repo is not (yet) public.
+Please, run what follows one you have a valid KRB5 token:
+  git clone https://:@gitlab.cern.ch:8443/eos/eos-charts.git
+  cd eos-charts
+  git checkout enbodev
+  git pull
+  
+  ./install.sh
+"
+
