@@ -11,8 +11,10 @@ GPU_DEPENDENCIES='moreutils runc'
 
 # Docker
 DOCKER_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
-DOCKER_URL_CENTOS8=$DOCKER_URL_CENTOS7  # For now (29/07/20), it is identical to the URL for CC7 and it works!
+DOCKER_URL_CENTOS8='https://download.docker.com/linux/centos/8/x86_64/stable/Packages/'
 DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
+CONTAINERD_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
+CONTAINERD_URL_CENTOS8='https://download.docker.com/linux/centos/8/x86_64/stable/Packages/'
 
 # Kubernetes
 KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
@@ -240,20 +242,23 @@ get_docker_version() {
 }
 
 _install_docker() {
-  # TODO: We might need to explicitly install containerd.io for newer versions
   local docker_package_url
 
   case "$OS_ID" in
     centos)
       case "$OS_VERSION" in
         7)
-          docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+          docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
+          docker_cli_url=$DOCKER_URL_CENTOS7'docker-ce-cli-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS7'containerd.io-'$CONTAINERD_VERSION'.el7.x86_64.rpm'
           ;;
         8)
-          docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'.ce-3.el7.x86_64.rpm'
+          docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
+          docker_cli_url=$DOCKER_URL_CENTOS8'docker-ce-cli-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS8'containerd.io-'$CONTAINERD_VERSION'.el8.x86_64.rpm'
           ;;
       esac
-      yum install -y -q $docker_package_url
+      yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url
       ;;
     ubuntu)
       docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~ce~3-0~ubuntu_amd64.deb'
