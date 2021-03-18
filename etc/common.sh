@@ -9,7 +9,7 @@ CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Software versions
 DOCKER_VERSION='19.03.15'
 CONTAINERD_VERSION='1.3.9-3.1'
-KUBERNETES_VERSION='v1.15.0'
+KUBERNETES_VERSION='v1.19.8'
 MINIKUBE_VERSION='v1.12.0'
 HELM_VERSION='v3.3.3'
 
