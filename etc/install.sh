@@ -10,22 +10,17 @@ DEPENDENCIES_UBUNTU='conntrack debianutils procps socat'
 GPU_DEPENDENCIES='moreutils runc'
 
 # Docker
-DOCKER_VERSION='18.06.3'         # Since 2019-02-19 (Required for GPU support)
 DOCKER_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
 DOCKER_URL_CENTOS8=$DOCKER_URL_CENTOS7  # For now (29/07/20), it is identical to the URL for CC7 and it works!
 DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 
 # Kubernetes
-# For KUBERNETES_VERSION --> See common.sh
 KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
 
 # Minikube
-MINIKUBE_VERSION='v1.12.0'
 MINIKUBE_URL="https://storage.googleapis.com/minikube/releases/$MINIKUBE_VERSION/minikube-linux-amd64"
 
 # Helm
-HELM_VERSION='v3.3.3'
-#HELM_VERSION='v2.16.12'
 HELM_URL="https://get.helm.sh/helm-$HELM_VERSION-linux-amd64.tar.gz"
 
 # GPU packages versions
