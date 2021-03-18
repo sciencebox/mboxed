@@ -6,8 +6,11 @@
 HOSTNAME=$(hostname -s)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
-# Kubernetes params
+# Software versions
+DOCKER_VERSION='18.06.3'
 KUBERNETES_VERSION='v1.15.0'
+MINIKUBE_VERSION='v1.12.0'
+HELM_VERSION='v3.3.3'
 
 
 # Functions
