@@ -346,27 +346,10 @@ install_minikube() {
 }
 
 get_helm_version() {
-  echo $(helm version --short | cut -d '+' -f 1) # Helm v3
-  #echo $(helm version --short 2> /dev/null | grep '^Client:' | cut -d ' ' -f 2 | cut -d '+' -f 1) # Helm v2
+  echo $(helm version --short | cut -d '+' -f 1)
 }
 
-_install_helm_v2() {
-  local tmp_fld='/tmp/helm'
-  local tmp_dst="$tmp_fld/helm.tar.gz"
-  local dst_helm=$(infer_binary_destination_from_PATH)"/helm"
-  local dst_tiller=$(infer_binary_destination_from_PATH)"/tiller"
-
-  mkdir -p $tmp_fld
-  curl -s -L $HELM_URL -o $tmp_dst
-  tar -xf $tmp_dst -C $tmp_fld
-  cp $tmp_fld/linux-amd64/helm $dst_helm
-  cp $tmp_fld/linux-amd64/tiller $dst_tiller
-  rm -rf $tmp_fld
-  chmod +x $dst_helm
-  chmod +x $dst_tiller
-}
-
-_install_helm_v3() {
+_install_helm() {
   local tmp_fld='/tmp/helm'
   local tmp_dst="$tmp_fld/helm.tar.gz"
   local dst_helm=$(infer_binary_destination_from_PATH)"/helm"
@@ -384,7 +367,7 @@ install_helm() {
 
   echo "Installing Helm..."
   if ! command_exists 'helm'; then
-    _install_helm_v3
+    _install_helm
   else
     helm_version=$(get_helm_version)
     if ! verify_string_version_match $HELM_VERSION $helm_version; then
