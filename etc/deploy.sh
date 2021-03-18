@@ -181,11 +181,6 @@ check_nvidia_driver()
 }
 
 
-configure_helm() {
-#TODO: Check this better
-  helm init
-}
-
 suggest_iptables_restore() {
   echo "WARNING: iptables configuration was modified when setting up ScienceBox."
   echo "  Consider restoring the previous configuraton with \`iptables-restore < iptables_<timestamp>.save\`."
