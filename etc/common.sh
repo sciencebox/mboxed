@@ -11,7 +11,7 @@ DOCKER_VERSION='19.03.15'
 CONTAINERD_VERSION='1.3.9-3.1'
 KUBERNETES_VERSION='v1.19.8'
 MINIKUBE_VERSION='v1.18.0'
-HELM_VERSION='v3.5.2'
+HELM_VERSION='v3.5.3'
 
 
 # Functions
@@ -156,12 +156,13 @@ stop_docker() {
 # Restart Docker
 #   Returns 1 if either between stop and start operations fail, 0 otherwise
 restart_docker() {
+  echo "Restarting Docker..."
   if ! stop_docker; then
-    echo "ERROR: Unable to stop Docker "
+    echo "  ✗ Error stopping Docker "
     return 1
   fi
   if ! start_docker; then
-    echo "ERROR: Unable to start Docker "
+    echo "  ✗ Error starting Docker "
     return 1
   fi
   return 0
