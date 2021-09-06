@@ -14,8 +14,8 @@ get_git_repo $KUBOXED_GIT
 prepare_kuboxed
 
 # Stop services first
-stop_minikube
-delete_minikube
+minikube_stop
+minikube_delete
 
 # Delete pulled images to reclaim space
 delete_images

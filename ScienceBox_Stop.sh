@@ -10,7 +10,7 @@ echo "WARNING: This will stop all the ScienceBox services, including CERNBox sto
 prompt_user_to_continue
 
 # Stop ScienceBox
-stop_minikube
+minikube_stop
 
 # Restore previous config if the user wants
 suggest_iptables_restore

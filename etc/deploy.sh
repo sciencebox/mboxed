@@ -22,7 +22,7 @@ SWAN_HTTP_PORT='10080'
 SWAN_HTTPS_PORT='10443'
 
 
-start_minikube() {
+minikube_start() {
   #TODO: Investigate other drivers
   echo "Starting minikube..."
   minikube start --driver=$MINIKUBE_DRIVER --kubernetes-version=$KUBERNETES_VERSION
@@ -33,12 +33,12 @@ start_minikube() {
   fi
 }
 
-stop_minikube() {
+minikube_stop() {
   echo "Stopping minikube..."
   minikube stop
 }
 
-delete_minikube() {
+minikube_delete() {
   echo "Deleting minikube..."
   minikube delete
 }
