@@ -43,6 +43,17 @@ minikube_delete() {
   minikube delete
 }
 
+minikube_ingess() {
+  echo "Enabling ingress addon... "
+  minikube addons enable ingress
+  if [ $? -ne 0 ]; then
+    echo "  ✗ Error with ingress addon"
+    echo "Cannot continue."
+    exit 1
+  fi
+
+}
+
 configure_sysctl_param() {
   local param=$1
   local value
