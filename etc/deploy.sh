@@ -23,7 +23,7 @@ SWAN_HTTPS_PORT='10443'
 
 
 start_minikube() {
-  #TODO: Investigate other dirvers
+  #TODO: Investigate other drivers
   echo "Starting minikube..."
   minikube start --driver=$MINIKUBE_DRIVER --kubernetes-version=$KUBERNETES_VERSION
   if [ $? -ne 0 ]; then
@@ -191,6 +191,20 @@ suggest_docker_daemon_restore() {
   echo "WARNING: If GPU support was enabled, the docker daemon configuration has been modified."
   echo "  Consider restoring the previous configuraton (if any) by moving docker_daemon.json_<timestamp>.save to /etc/docker/daemon.json"
   echo "  If you ran the set up script multiple times, you should like restore the oldest file."
+}
+
+
+helm_repo_add() {
+  local repo_name=$1
+  local url=$2
+
+  echo "Adding helm repo $repo_name..."
+  helm repo add $repo_name $url
+  helm_repo_update > /dev/null
+}
+
+helm_repo_update() {
+  helm repo update
 }
 
 
