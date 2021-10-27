@@ -3,7 +3,7 @@
 
 
 # Required packages
-ESSENTIAL_PACKAGES='curl gawk git hostname iptables sed tar'
+ESSENTIAL_PACKAGES='curl gawk git hostname iptables jq sed tar'
 CONTAINER_PACKAGES='docker kubectl minikube'
 DEPENDENCIES_CENTOS='conntrack-tools libselinux-utils procps-ng socat which'
 DEPENDENCIES_UBUNTU='conntrack debianutils procps socat'

@@ -30,6 +30,7 @@ helm_repo_update
 # Bootstrap Minikube 
 minikube_start
 minikube_ingess
+ingress_patch ocis-idp 9130
 
 ## # Deployment
 ## check_required_images

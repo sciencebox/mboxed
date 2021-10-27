@@ -51,7 +51,41 @@ minikube_ingess() {
     echo "Cannot continue."
     exit 1
   fi
+}
 
+ingress_patch() {
+  # As per:
+  # - https://kubernetes.io/docs/tasks/access-application-cluster/ingress-minikube/
+  # - https://github.com/kubernetes/ingress-nginx
+  # - https://kubernetes.io/docs/tasks/manage-kubernetes-objects/update-api-object-kubectl-patch/
+
+  local service_name=$1
+  local container_port=$2
+  local host_port=$3
+  local namespace=$4
+
+  if [ x"$host_port" == x"" ]; then
+    host_port=$container_port
+  fi
+  if [ x"$namespace" == x"" ]; then
+    namespace='default'
+  fi
+
+  echo "Configuring ingress for $service_name on port $host_port..."
+  target="$namespace/$service_name:$container_port"
+  json_patch=$(jq --null-input --compact-output \
+    --arg host_port "$host_port" \
+    --arg target "$target" \
+    '{"data":{($host_port):($target)}}'
+    )
+  kubectl -n kube-system patch configmap tcp-services --patch=$json_patch
+
+  json_patch=$(jq --null-input --compact-output \
+    --arg hp "$host_port" \
+    --arg cp "$container_port" \
+    '{"spec":{"template":{"spec":{"containers":[{"name":"controller","ports":[{"containerPort":($cp | tonumber),"hostPort":($hp | tonumber)}]}]}}}}' \
+    )
+ kubectl -n kube-system patch deployment ingress-nginx-controller --patch=$json_patch
 }
 
 configure_sysctl_param() {
