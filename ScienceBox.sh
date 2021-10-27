@@ -29,12 +29,13 @@ helm_repo_update
 
 # Bootstrap Minikube 
 minikube_start
+minikube_ingess
 
 ## # Deployment
 ## check_required_images
 ## create_namespace
 ## #deploy_services
 
-# Deploy services with Helm charts
+# Deploy ScienceBox with Helm charts
 #TODO: deploy_helm_charts
 
