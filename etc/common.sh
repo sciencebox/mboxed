@@ -3,7 +3,7 @@
 
 
 # Environment
-HOSTNAME=$(hostname -s)
+HOSTNAME=$(hostname --fqdn)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Software versions
