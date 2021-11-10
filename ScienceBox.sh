@@ -21,22 +21,16 @@ helm_repo_add sciencebox https://registry.cern.ch/chartrepo/sciencebox
 helm_repo_add eos https://registry.cern.ch/chartrepo/eos
 #helm_repo_add cernbox ???
 helm_repo_add swan https://registry.cern.ch/chartrepo/swan
-helm_repo_add sciencebox https://registry.cern.ch/chartrepo/sciencebox
 helm_repo_update
 
-# Prepare persistent storage
+## Prepare for deployment
 # create_persistent_storage
+# pre_pull_images
 
 # Bootstrap Minikube 
 minikube_start
 minikube_ingess
-ingress_patch ocis-idp 9130
 
-## # Deployment
+# Deployment ScienceBox
 ## check_required_images
-## create_namespace
-## #deploy_services
-
-# Deploy ScienceBox with Helm charts
-#TODO: deploy_helm_charts
-
+install_charts

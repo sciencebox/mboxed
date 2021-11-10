@@ -208,11 +208,13 @@ helm_repo_update() {
 
 get_sciencebox_images_list() {
   # TODO
+  return
 }
 
 
 get_singleuser_image_name() {
   # TODO
+  return
 }
 
 
@@ -268,3 +270,14 @@ delete_images() {
 }
 
 
+install_charts() {
+  helm upgrade --install \
+    --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
+    --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
+    --set eos-instance-config.config.oauth.enabled=true \
+    --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
+    --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
+    --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
+    --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
+     sciencebox sciencebox/sciencebox
+}
