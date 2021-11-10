@@ -123,22 +123,6 @@ infer_binary_destination_from_PATH() {
 }
 
 
-# Get git repository from URL
-#   Args:
-#     - git repository to be cloned
-#     - (optional) destination directory
-#   Returns exit code of `git clone` command
-get_git_repo() {
-  local git_repo=$1
-  local dst=$2
-  local ret_code
-
-  echo "Cloning repository $git_repo..."
-  git clone $git_repo $dst > /dev/null 2>&1
-  return $?
-}
-
-
 # Start Docker
 #   Returns exit code of `systemctl start docker`
 start_docker() {
@@ -227,18 +211,4 @@ prompt_user_for_gpu_support() {
       ;;
   esac
 }
-
-
-
-##  # Infer which package provides the command
-##  cmd_fullpath=$(get_command_fullpath $cmd)
-##
-##  # Get the package version
-##  if [ x"$cmd_fullpath" != x"" ]; then
-##    pkg=$(rpm -q --whatprovides $cmd_fullpath)
-##    ver=$(rpm -q --qf "%{VERSION}" $pkg)
-##    echo $ver
-##  else
-##    echo '-1' # command not found
-##  fi
 
