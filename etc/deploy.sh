@@ -270,6 +270,16 @@ delete_images() {
 }
 
 
+_install_inform_user() {
+  echo "ScienceBox is being installed!"
+  echo "  The deployment should be ready in few minutes"
+  echo "  You can check the containers status by typing \`kubectl get pods\`"
+  echo ""
+  echo "  Once all the containers are running (or completed), you can reach ScienceBox from your browser at"
+  echo "  https://$HOSTNAME"
+  echo ""
+}
+
 install_charts() {
   helm upgrade --install \
     --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
@@ -280,4 +290,6 @@ install_charts() {
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
      sciencebox sciencebox/sciencebox
+
+  _install_inform_user
 }
