@@ -18,6 +18,7 @@ One-click installation of ScienceBox on a single host, based on minikube.
   - If no valid TLS certificate is provided, SWAN's jupyterhub will refuse to start and integration with EOS storage will not be possible.
   - A workaround to tolerate self-signed certificates (or default nginx ingress certificate) is being worked on.
 - Storage persistency is not provided in minikube at the moment. Data stored in ScienceBox will be lost when containers are removed // restarted.
+- Software packages required by SWAN are fetched on demand via CVMFS. In case of slow Internet connection, starting a SWAN session may timeout and fail. Retrying immediately after helps in spawning the session successfully.
 
 
 ### Default users
