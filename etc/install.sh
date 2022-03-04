@@ -159,10 +159,15 @@ install_package() {
 install_deb() {
   local pkg_url=$1
   local pkg_deb='/tmp/to_install.deb'
+  local pkg_cli=$2
+  local pkg_cli_deb='/tmp/cli_to_install.deb'
+  curl -s -L $pkg_cli -o $pkg_cli_deb
+  dpkg --install $pkg_cli_deb > /dev/null 2>&1
 
   curl -s -L $pkg_url -o $pkg_deb
   dpkg --install $pkg_deb > /dev/null 2>&1
   rm -rf $pkg_deb
+  rm -rf $pkg_cli_deb
 }
 
 #check_package() {
@@ -243,6 +248,7 @@ get_docker_version() {
 
 _install_docker() {
   local docker_package_url
+  local docker_package_cli
 
   case "$OS_ID" in
     centos)
@@ -261,8 +267,9 @@ _install_docker() {
       yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url
       ;;
     ubuntu)
-      docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~ce~3-0~ubuntu_amd64.deb'
-      install_deb $docker_package_url
+      docker_package_cli=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce-cli_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      install_deb $docker_package_url $docker_package_cli
       ;;
   esac
   start_docker
