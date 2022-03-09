@@ -33,4 +33,7 @@ minikube_ingess
 
 # Deployment ScienceBox
 ## check_required_images
+
+# wait for generating ssl certificates for the ingress validation webhook
+sleep 30
 install_charts

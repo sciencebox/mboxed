@@ -7,11 +7,11 @@ HOSTNAME=$(hostname --fqdn)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Software versions
-DOCKER_VERSION='19.03.15'
+DOCKER_VERSION='20.10.9'
 CONTAINERD_VERSION='1.3.9-3.1'
-KUBERNETES_VERSION='v1.19.8'
-MINIKUBE_VERSION='v1.18.0'
-HELM_VERSION='v3.5.3'
+KUBERNETES_VERSION='v1.20.15'
+MINIKUBE_VERSION='latest'
+HELM_VERSION='v3.8.0'
 
 
 # Functions
