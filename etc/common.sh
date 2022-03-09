@@ -7,10 +7,15 @@ HOSTNAME=$(hostname --fqdn)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Software versions
+#   - Docker release notes: https://docs.docker.com/engine/release-notes/
 DOCKER_VERSION='20.10.9'
+#   - containerd releases: https://github.com/containerd/containerd/releases
 CONTAINERD_VERSION='1.3.9-3.1'
+#   - k8s releases: https://github.com/kubernetes/kubernetes/releases
 KUBERNETES_VERSION='v1.20.15'
+#   - minikube releases: https://github.com/kubernetes/minikube/releases
 MINIKUBE_VERSION='latest'
+#   - helm releases: https://github.com/helm/helm/releases
 HELM_VERSION='v3.8.0'
 
 
