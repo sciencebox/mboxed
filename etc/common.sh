@@ -14,7 +14,7 @@ CONTAINERD_VERSION='1.3.9-3.1'
 #   - k8s releases: https://github.com/kubernetes/kubernetes/releases
 KUBERNETES_VERSION='v1.20.15'
 #   - minikube releases: https://github.com/kubernetes/minikube/releases
-MINIKUBE_VERSION='latest'
+MINIKUBE_VERSION='v1.25.1'
 #   - helm releases: https://github.com/helm/helm/releases
 HELM_VERSION='v3.8.0'
 
