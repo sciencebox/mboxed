@@ -182,13 +182,13 @@ check_nvidia_driver()
 suggest_iptables_restore() {
   echo "WARNING: iptables configuration was modified when setting up ScienceBox."
   echo "  Consider restoring the previous configuraton with \`iptables-restore < iptables_<timestamp>.save\`."
-  echo "  If you ran the set up script multiple times, you should like restore the oldest file."
+  echo "  If you ran the set up script multiple times, you should likely restore the oldest file."
 }
 
 suggest_docker_daemon_restore() {
   echo "WARNING: If GPU support was enabled, the docker daemon configuration has been modified."
   echo "  Consider restoring the previous configuraton (if any) by moving docker_daemon.json_<timestamp>.save to /etc/docker/daemon.json"
-  echo "  If you ran the set up script multiple times, you should like restore the oldest file."
+  echo "  If you ran the set up script multiple times, you should likely restore the oldest file."
 }
 
 
