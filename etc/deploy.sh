@@ -289,6 +289,8 @@ _install_inform_user() {
 }
 
 install_charts() {
+  # installs nginx - sciencebox/sciencebox ingress should point to the service
+  helm upgrade --install --set service.type=NodePort nginx bitnami/nginx
   helm upgrade --install \
     --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
     --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
