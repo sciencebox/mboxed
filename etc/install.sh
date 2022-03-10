@@ -263,12 +263,18 @@ _install_docker() {
       yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url
       ;;
     ubuntu)
-      docker_package_cli=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce-cli_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
       docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      docker_package_deb='/tmp/docker.deb'
+      curl -s -L $docker_package_url -o $docker_package_deb
+      docker_cli_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce-cli_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      docker_cli_deb='/tmp/docker_cli.deb'
+      curl -s -L $docker_cli_url -o $docker_cli_deb
       containerd_package_url=$CONTAINERD_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/containerd.io_'$CONTAINERD_VERSION'_amd64.deb'
-      install_deb $containerd_package_url
-      install_deb $docker_package_cli
-      install_deb $docker_package_url
+      containerd_package_deb='/tmp/containerd.deb'
+      curl -s -L $containerd_package_url -o $containerd_package_deb
+
+      dpkg --install $docker_package_deb $docker_cli_deb $containerd_package_deb > /dev/null 2>&1
+      rm -f $docker_package_deb $docker_cli_deb $containerd_package_deb
       ;;
   esac
   start_docker
