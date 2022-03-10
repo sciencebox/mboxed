@@ -41,6 +41,14 @@ minikube_ingess() {
   fi
 }
 
+minikube_ingress_wait() {
+  echo "Waiting for ingress controller to be available..."
+  kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "  ✗ Ingress controller timed out. Please check for issues on the ingress control plane."
+  fi
+}
+
 
 ingress_patch() {
   # As per:
