@@ -9,6 +9,7 @@ CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 # Software versions
 #   - Docker release notes: https://docs.docker.com/engine/release-notes/
 DOCKER_VERSION='20.10.9'
+DOCKER_SCANPLUGIN_VERSION='0.9.0'       # Used by CentOS only
 #   - containerd releases: https://github.com/containerd/containerd/releases
 CONTAINERD_VERSION='1.4.13'
 #   - k8s releases: https://github.com/kubernetes/kubernetes/releases
