@@ -252,12 +252,12 @@ _install_docker() {
         7)
           docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
           docker_cli_url=$DOCKER_URL_CENTOS7'docker-ce-cli-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
-          containerd_package_url=$CONTAINERD_URL_CENTOS7'containerd.io-'$CONTAINERD_VERSION'.el7.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS7'containerd.io-'$CONTAINERD_VERSION'-3.1.el7.x86_64.rpm'
           ;;
         8)
           docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
           docker_cli_url=$DOCKER_URL_CENTOS8'docker-ce-cli-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
-          containerd_package_url=$CONTAINERD_URL_CENTOS8'containerd.io-'$CONTAINERD_VERSION'.el8.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS8'containerd.io-'$CONTAINERD_VERSION'-3.1.el8.x86_64.rpm'
           ;;
       esac
       yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url
@@ -269,7 +269,7 @@ _install_docker() {
       docker_cli_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce-cli_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
       docker_cli_deb='/tmp/docker_cli.deb'
       curl -s -L $docker_cli_url -o $docker_cli_deb
-      containerd_package_url=$CONTAINERD_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/containerd.io_'$CONTAINERD_VERSION'_amd64.deb'
+      containerd_package_url=$CONTAINERD_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/containerd.io_'$CONTAINERD_VERSION'-1_amd64.deb'
       containerd_package_deb='/tmp/containerd.deb'
       curl -s -L $containerd_package_url -o $containerd_package_deb
 
