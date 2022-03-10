@@ -30,7 +30,10 @@ helm_repo_update
 # Bootstrap Minikube 
 minikube_start
 minikube_ingess
+minikube_ingress_wait
 
 # Deployment ScienceBox
 ## check_required_images
+
+# wait for generating ssl certificates for the ingress validation webhook
 install_charts

@@ -20,6 +20,17 @@ One-click installation of ScienceBox on a single host, based on minikube.
 - Storage persistency is not provided in minikube at the moment. Data stored in ScienceBox will be lost when containers are removed // restarted.
 - Software packages required by SWAN are fetched on demand via CVMFS. In case of slow Internet connection, starting a SWAN session may timeout and fail. Retrying immediately after helps in spawning the session successfully.
 
+#### For Ubuntu Machines
+
+Since Minikube is configured to run with the `none` driver, one needs to have the root privileges to access the services deployed as a part of ScienceBox. More information about the `none` driver can be found [here](https://minikube.sigs.k8s.io/docs/drivers/none/).
+
+Since, we need to root privilege to run ScienceBox, the user might run into following error when running `sudo ./ScienceBox.sh` or `sudo ./ScienceBox_Delete.sh`:
+
+```
+❌  Exiting due to HOST_JUJU_LOCK_PERMISSION: writing kubeconfig: Error writing file /root/.kube/config: failed to acquire lock for /root/.kube/config: {Name:mk72a1487fd2da23da9e8181e16f352a6105bd56 Clock:{} Delay:500ms Timeout:1m0s Cancel:<nil>}: unable to open /tmp/juju-mk72a1487fd2da23da9e8181e16f352a6105bd56: permission denied
+```
+
+In order to fix the above issue, user can run `sudo sysctl fs.protected_regular=0`. 
 
 ### Default users
 Several default users are pre-configured in the Identity Provider. You can use these to access ScienceBox services.

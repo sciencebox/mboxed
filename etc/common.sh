@@ -7,11 +7,18 @@ HOSTNAME=$(hostname --fqdn)
 CWD="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
 # Software versions
-DOCKER_VERSION='19.03.15'
-CONTAINERD_VERSION='1.3.9-1'
-KUBERNETES_VERSION='v1.19.8'
-MINIKUBE_VERSION='v1.18.0'
-HELM_VERSION='v3.5.3'
+#   - Docker release notes: https://docs.docker.com/engine/release-notes/
+DOCKER_VERSION='20.10.9'
+DOCKER_SCANPLUGIN_VERSION='0.9.0'       # Used by CentOS only
+#   - containerd releases: https://github.com/containerd/containerd/releases
+CONTAINERD_VERSION='1.4.13'
+#   - k8s releases: https://github.com/kubernetes/kubernetes/releases
+KUBERNETES_VERSION='v1.20.15'
+#   - minikube releases: https://github.com/kubernetes/minikube/releases
+MINIKUBE_VERSION='v1.25.1'
+#   - helm releases: https://github.com/helm/helm/releases
+HELM_VERSION='v3.8.0'
+
 
 
 # Functions
@@ -211,4 +218,3 @@ prompt_user_for_gpu_support() {
       ;;
   esac
 }
-
