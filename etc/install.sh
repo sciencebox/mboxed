@@ -15,6 +15,7 @@ DOCKER_URL_CENTOS8='https://download.docker.com/linux/centos/8/x86_64/stable/Pac
 DOCKER_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 CONTAINERD_URL_CENTOS7='https://download.docker.com/linux/centos/7/x86_64/stable/Packages/'
 CONTAINERD_URL_CENTOS8='https://download.docker.com/linux/centos/8/x86_64/stable/Packages/'
+CONTAINERD_URL_UBUNTU='https://download.docker.com/linux/ubuntu/dists/'
 
 # Kubernetes
 KUBECTL_URL="https://storage.googleapis.com/kubernetes-release/release/$KUBERNETES_VERSION/bin/linux/amd64/kubectl"
@@ -243,6 +244,7 @@ get_docker_version() {
 
 _install_docker() {
   local docker_package_url
+  local docker_package_cli
 
   case "$OS_ID" in
     centos)
@@ -261,8 +263,18 @@ _install_docker() {
       yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url
       ;;
     ubuntu)
-      docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~ce~3-0~ubuntu_amd64.deb'
-      install_deb $docker_package_url
+      docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      docker_package_deb='/tmp/docker.deb'
+      curl -s -L $docker_package_url -o $docker_package_deb
+      docker_cli_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce-cli_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
+      docker_cli_deb='/tmp/docker_cli.deb'
+      curl -s -L $docker_cli_url -o $docker_cli_deb
+      containerd_package_url=$CONTAINERD_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/containerd.io_'$CONTAINERD_VERSION'_amd64.deb'
+      containerd_package_deb='/tmp/containerd.deb'
+      curl -s -L $containerd_package_url -o $containerd_package_deb
+
+      dpkg --install $docker_package_deb $docker_cli_deb $containerd_package_deb > /dev/null 2>&1
+      rm -f $docker_package_deb $docker_cli_deb $containerd_package_deb
       ;;
   esac
   start_docker

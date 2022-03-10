@@ -19,6 +19,7 @@ MINIKUBE_VERSION='v1.25.1'
 HELM_VERSION='v3.8.0'
 
 
+
 # Functions
 # Check to be root
 #   If not root, bail out
@@ -216,4 +217,3 @@ prompt_user_for_gpu_support() {
       ;;
   esac
 }
-
