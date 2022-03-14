@@ -4,7 +4,7 @@ One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox)
 
 
 ### Quick Setup
-1. Clone this repository
+1. Clone this repository using `git clone https://github.com/sciencebox/mboxed.git`
 2. Run (as sudo)
   ```
   SetupInstall.sh
@@ -12,6 +12,22 @@ One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox)
   ```
 3. Open a browser and go to https://<your_host>
 
+
+### Stopping the services
+
+In order to stop the ScienceBox service, run:
+
+```bash
+sudo bash ./ScienceBox_Stop.sh
+```
+
+### Deleting the services
+
+In order to delete the ScienceBox service, run:
+
+```bash
+sudo bash ./ScienceBox_Delete.sh
+```
 
 ### Limitations and known issues
 - A valid TLS certificate must be provided to the nginx ingress controller (upstream documentation at https://kubernetes.github.io/ingress-nginx/user-guide/tls/)
