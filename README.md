@@ -20,8 +20,6 @@ One-click installation of ScienceBox on a single host, based on minikube.
 - Storage persistency is not provided in minikube at the moment. Data stored in ScienceBox will be lost when containers are removed // restarted.
 - Software packages required by SWAN are fetched on demand via CVMFS. In case of slow Internet connection, starting a SWAN session may timeout and fail. Retrying immediately after helps in spawning the session successfully.
 
-#### For Ubuntu Machines
-
 Since Minikube is configured to run with the `none` driver, one needs to have the root privileges to access the services deployed as a part of ScienceBox. More information about the `none` driver can be found [here](https://minikube.sigs.k8s.io/docs/drivers/none/).
 
 Since, we need to root privilege to run ScienceBox, the user might run into following error when running `sudo ./ScienceBox.sh` or `sudo ./ScienceBox_Delete.sh`:
@@ -49,11 +47,11 @@ Several default users are pre-configured in the Identity Provider. You can use t
 
 
 ### Tested (and developed) on
-- OS: CentOS 7.9 (kernel version: 3.10)
-- Docker: 19.03.15
-- Kubectl: 1.19.8
-- minikube: 1.18.0
-- Helm: 3.5.3
+- OS: CentOS 7.9 (kernel version: 3.10), Ubuntu 20.04 (kernel version: 5.13.0-35-generic)
+- Docker: 20.10.12
+- Kubectl: 1.20.15
+- minikube: 1.25.2
+- Helm: 3.8.0
 
 
 ### Feedback, contributions, and issues
