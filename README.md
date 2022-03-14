@@ -1,6 +1,6 @@
 ## mboxed
 
-One-click installation of ScienceBox on a single host, based on minikube.
+One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox) on a single host, based on minikube.
 
 
 ### Quick Setup
@@ -43,7 +43,7 @@ Several default users are pre-configured in the Identity Provider. You can use t
 ### Requirements
 - 4 GB memory
 - 40 GB of free space on disk
-- CentOS 7, 8
+- CentOS 7, 8 or Ubuntu 20.04
 
 
 ### Tested (and developed) on
