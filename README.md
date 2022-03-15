@@ -1,6 +1,11 @@
 ## mboxed
 
-One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox) on a single host, based on minikube.
+One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox) on a single host, based on minikube. MBoxed is a self-contained, containerized demo for cloud storage and computing services for scientific and general-purpose use:
+
+* [CERNBox](https://cernbox.web.cern.ch)
+* [CVMFS](https://cvmfs.web.cern.ch)
+* [EOS](https://eos.web.cern.ch)
+* [SWAN](https://swan.web.cern.ch)
 
 
 ### Quick Setup
@@ -10,7 +15,7 @@ One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox)
   SetupInstall.sh
   ScienceBox.sh
   ```
-3. Open a browser and go to https://<your_host>
+3. Open a browser and go to https://<your_host> to access sciencebox services.
 
 
 ### Stopping the services
