@@ -289,9 +289,8 @@ _install_inform_user() {
 }
 
 install_charts() {
-  # installs nginx - sciencebox/sciencebox ingress should point to the service
-  # helm upgrade --install --set ingress.enabled=true --set service.type=NodePort --set ingress.hostname=${HOSTNAME} nginx bitnami/nginx
   helm upgrade --install \
+    --set nginx.ingress.hostname=${HOSTNAME} \
     --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
     --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
     --set eos-instance-config.config.oauth.enabled=true \
@@ -299,8 +298,7 @@ install_charts() {
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
-    --set nginx.ingress.hostname=${HOSTNAME} \
-     sciencebox ../charts/sciencebox
+    sciencebox sciencebox/sciencebox
 
   _install_inform_user
 }
