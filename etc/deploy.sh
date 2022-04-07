@@ -279,8 +279,12 @@ delete_images() {
 
 
 _install_inform_user() {
+  echo ""
+  echo ""
   echo "ScienceBox is being installed!"
-  echo "  The deployment should be ready in few minutes"
+  echo "  Now it is a good time to grab a coffee..."
+  echo ""
+  echo "  The deployment should be ready in few minuites"
   echo "  You can check the containers status by typing \`kubectl get pods\`"
   echo ""
   echo "  Once all the containers are running (or completed), you can reach ScienceBox from your browser at"
