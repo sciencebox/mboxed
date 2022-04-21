@@ -291,14 +291,16 @@ _install_inform_user() {
 install_charts() {
   helm upgrade --install \
     --set nginx.ingress.hostname=${HOSTNAME} \
-    --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
     --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
+    --set ocis-idp.env.IDP_ISS=https://localhost:9200 \
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
-    --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
-    --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
-    --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
-    sciencebox sciencebox/sciencebox
+    --set-file gateway.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/gateway.toml \
+    --set-file storageprovider-home.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/storageprovider-home.toml \
+    --set-file storageprovider-user.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/storageprovider-user.toml \
+    --set-file storageprovider-public.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/storageprovider-public.toml \
+    --set-file authprovider-machine.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/authprovider-machine.toml \
+    sciencebox ../charts/sciencebox
 
   _install_inform_user
 }
