@@ -291,8 +291,6 @@ _install_inform_user() {
 install_charts() {
   helm upgrade --install \
     --set nginx.ingress.hostname=${HOSTNAME} \
-    --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
-    --set ocis-idp.env.IDP_ISS=https://localhost:9200 \
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
     --set-file gateway.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/gateway.toml \

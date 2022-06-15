@@ -30,7 +30,7 @@ helm_repo_update
 
 # Bootstrap Minikube 
 minikube_start
-# minikube_ingess
+minikube_ingess
 minikube_ingress_wait
 
 # Deploy ScienceBox
