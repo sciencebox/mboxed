@@ -296,9 +296,9 @@ install_charts() {
     --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
     --set ocis-idp.env.OCIS_URL=https://${HOSTNAME} \
     --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
-    --set ocis-idp.config.server=https://${HOSTNAME} \
-    --set ocis-idp.config.metadata_url=https://${HOSTNAME}/.well-known/openid-configuration \
-    --set ocis-idp.config.authprovider=https://${HOSTNAME} \
+    --set ocis-idp.config.server="https://${HOSTNAME}" \
+    --set ocis-idp.config.metadata_url="https://${HOSTNAME}/.well-known/openid-configuration" \
+    --set ocis-idp.config.authority="https://${HOSTNAME}" \
     --set-file gateway.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/gateway.toml \
     --set-file storageprovider-home.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/storageprovider-home.toml \
     --set-file storageprovider-user.configFiles.revad\\.toml=../charts/sciencebox/files/revad-config/storageprovider-user.toml \
