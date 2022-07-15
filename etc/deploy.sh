@@ -288,17 +288,23 @@ _install_inform_user() {
   echo "  You can check the containers status by typing \`kubectl get pods\`."
   echo ""
   echo "  Once all the containers are running (or completed), you can reach ScienceBox from your browser at"
-  echo "  https://$HOSTNAME"
+  echo "  https://$HOSTNAME/sciencebox"
   echo ""
 }
 
 install_charts() {
   helm upgrade --install \
-    --set nginx.ingress.hostname=${HOSTNAME} \
-    --set ocis-idp.env.IDP_ISS=https://${HOSTNAME} \
-    --set ocis-idp.ingress.hosts="{${HOSTNAME}}" \
+    --set nginx-welcome-page.ingress.hostname=${HOSTNAME} \
+    --set nginx-cernbox-theme.ingress.hostname=${HOSTNAME} \
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
+    --set ocis.env.IDP_ISS=https://${HOSTNAME} \
+    --set ocis.env.WEB_UI_THEME_SERVER=https://${HOSTNAME} \
+    --set ocis.env.OCIS_URL=https://${HOSTNAME} \
+    --set ocis.ingress.hosts="{${HOSTNAME}}" \
+    --set ocis.config.server="https://${HOSTNAME}" \
+    --set ocis.config.metadata_url="https://${HOSTNAME}/.well-known/openid-configuration" \
+    --set ocis.config.authority="https://${HOSTNAME}" \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
