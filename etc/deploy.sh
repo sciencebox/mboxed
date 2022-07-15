@@ -290,8 +290,8 @@ _install_inform_user() {
 
 install_charts() {
   helm upgrade --install \
-    --set nginx.ingress.hostname=${HOSTNAME} \
-    --set cernbox-theme.ingress.hostname=${HOSTNAME} \
+    --set nginx-welcome-page.ingress.hostname=${HOSTNAME} \
+    --set nginx-cernbox-theme.ingress.hostname=${HOSTNAME} \
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
     --set ocis.env.IDP_ISS=https://${HOSTNAME} \
