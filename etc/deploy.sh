@@ -304,7 +304,7 @@ install_charts() {
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
-    sciencebox ../charts/sciencebox
+    sciencebox sciencebox/sciencebox
 
   _install_inform_user
 }
