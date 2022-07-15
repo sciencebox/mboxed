@@ -295,6 +295,7 @@ install_charts() {
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
     --set ocis.env.IDP_ISS=https://${HOSTNAME} \
+    --set ocis.env.WEB_UI_THEME_SERVER=https://${HOSTNAME} \
     --set ocis.env.OCIS_URL=https://${HOSTNAME} \
     --set ocis.ingress.hosts="{${HOSTNAME}}" \
     --set ocis.config.server="https://${HOSTNAME}" \
