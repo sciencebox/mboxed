@@ -35,20 +35,18 @@ sudo bash ./ScienceBox_Delete.sh
 ```
 
 ### Limitations and known issues
-- A valid TLS certificate must be provided to the nginx ingress controller (upstream documentation at https://kubernetes.github.io/ingress-nginx/user-guide/tls/)
-  - If no valid TLS certificate is provided, SWAN's jupyterhub will refuse to start and integration with EOS storage will not be possible.
-  - A workaround to tolerate self-signed certificates (or default nginx ingress certificate) is being worked on.
+- The package name in Helm must be `sciencebox`. It is currently hard-coded in several configuration parameters. We are progressively cleaning this up. 
 - Storage persistency is not provided in minikube at the moment. Data stored in ScienceBox will be lost when containers are removed // restarted.
 - Software packages required by SWAN are fetched on demand via CVMFS. In case of slow Internet connection, starting a SWAN session may timeout and fail. Retrying immediately after helps in spawning the session successfully.
+- The login page shows an ownCloud UI theme. We are working to align the login page theme to the CERNBox theme.
+- When creating a public share in CERNBox, it return only the URL path but not the domain name. If in the need of using such functionality, please prepend the domain name where ScienceBox is reachable.
 
 Since Minikube is configured to run with the `none` driver, one needs to have the root privileges to access the services deployed as a part of ScienceBox. More information about the `none` driver can be found [here](https://minikube.sigs.k8s.io/docs/drivers/none/).
 
 Since, we need to root privilege to run ScienceBox, the user might run into following error when running `sudo ./ScienceBox.sh` or `sudo ./ScienceBox_Delete.sh`:
-
 ```
 ❌  Exiting due to HOST_JUJU_LOCK_PERMISSION: writing kubeconfig: Error writing file /root/.kube/config: failed to acquire lock for /root/.kube/config: {Name:mk72a1487fd2da23da9e8181e16f352a6105bd56 Clock:{} Delay:500ms Timeout:1m0s Cancel:<nil>}: unable to open /tmp/juju-mk72a1487fd2da23da9e8181e16f352a6105bd56: permission denied
 ```
-
 In order to fix the above issue, user can run `sudo sysctl fs.protected_regular=0`. 
 
 ### Default users
