@@ -284,7 +284,7 @@ _install_inform_user() {
   echo "  You can check the containers status by typing \`kubectl get pods\`"
   echo ""
   echo "  Once all the containers are running (or completed), you can reach ScienceBox from your browser at"
-  echo "  https://$HOSTNAME"
+  echo "  https://$HOSTNAME/sciencebox"
   echo ""
 }
 
