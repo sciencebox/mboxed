@@ -299,14 +299,14 @@ install_charts() {
     --set nginx-cernbox-theme.ingress.hostname=${HOSTNAME} \
     --set eos-instance-config.config.oauth.enabled=true \
     --set eos-instance-config.config.oauth.resourceEndpoint=${HOSTNAME}/konnect/v1/userinfo \
-    --set ocis.env.IDP_ISS=https://${HOSTNAME} \
-    --set ocis.env.OCIS_URL=https://${HOSTNAME} \
-    --set ocis.ingress.hosts="{${HOSTNAME}}" \
-    --set ocis.config.server="https://${HOSTNAME}" \
+    --set cernbox.ocis.env.IDP_ISS=https://${HOSTNAME} \
+    --set cernbox.ocis.env.OCIS_URL=https://${HOSTNAME} \
+    --set cernbox.ocis.ingress.hosts="{${HOSTNAME}}" \
+    --set cernbox.ocis.config.server="https://${HOSTNAME}" \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
-    sciencebox sciencebox/sciencebox
+    sciencebox ../charts/sciencebox
 
   _install_inform_user
 }
