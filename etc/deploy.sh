@@ -293,8 +293,7 @@ _install_inform_user() {
 }
 
 install_charts() {
-  helm upgrade --install  \
-    --set sciencebox.config.server="https://${HOSTNAME}" \
+  helm upgrade --install \
     --set nginx-welcome-page.ingress.hostname=${HOSTNAME} \
     --set nginx-cernbox-theme.ingress.hostname=${HOSTNAME} \
     --set eos-instance-config.config.oauth.enabled=true \
@@ -302,6 +301,7 @@ install_charts() {
     --set cernbox.ocis.env.IDP_ISS=https://${HOSTNAME} \
     --set cernbox.ocis.env.OCIS_URL=https://${HOSTNAME} \
     --set cernbox.ocis.ingress.hosts="{${HOSTNAME}}" \
+    --set cernbox.cernboxconfig.server="https://${HOSTNAME}" \
     --set cernbox.gateway.hostname="https://${HOSTNAME}" \
     --set cernbox.authproviderbearer.hostname="https://${HOSTNAME}" \
     --set cernbox.ocis.config.server="https://${HOSTNAME}" \
