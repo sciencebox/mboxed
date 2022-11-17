@@ -15,7 +15,7 @@ One-click installation of [ScienceBox](https://github.com/sciencebox/sciencebox)
   SetupInstall.sh
   ScienceBox.sh
   ```
-3. Open a browser and go to https://<your_host> to access sciencebox services.
+3. Open a browser and go to https://<your_host>/sciencebox to access sciencebox services.
 
 
 ### Stopping the services
@@ -34,12 +34,13 @@ In order to delete the ScienceBox service, run:
 sudo bash ./ScienceBox_Delete.sh
 ```
 
+### Documentation
+
+To learn more about sciencebox and it's services, check out the documentation [here](https://sciencebox.web.cern.ch/). To learn more about the Helm charts themselves, check out [artifact hub](https://artifacthub.io/packages/helm/sciencebox/sciencebox).
+
 ### Limitations and known issues
-- The package name in Helm must be `sciencebox`. It is currently hard-coded in several configuration parameters. We are progressively cleaning this up. 
-- Storage persistency is not provided in minikube at the moment. Data stored in ScienceBox will be lost when containers are removed // restarted.
 - Software packages required by SWAN are fetched on demand via CVMFS. In case of slow Internet connection, starting a SWAN session may timeout and fail. Retrying immediately after helps in spawning the session successfully.
 - The login page shows an ownCloud UI theme. We are working to align the login page theme to the CERNBox theme.
-- When creating a public share in CERNBox, it return only the URL path but not the domain name. If in the need of using such functionality, please prepend the domain name where ScienceBox is reachable.
 
 Since Minikube is configured to run with the `none` driver, one needs to have the root privileges to access the services deployed as a part of ScienceBox. More information about the `none` driver can be found [here](https://minikube.sigs.k8s.io/docs/drivers/none/).
 
