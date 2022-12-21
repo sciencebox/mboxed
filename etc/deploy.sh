@@ -301,10 +301,10 @@ install_charts() {
     --set cernbox.ocis.env.IDP_ISS=https://${HOSTNAME} \
     --set cernbox.ocis.env.OCIS_URL=https://${HOSTNAME} \
     --set cernbox.ocis.ingress.hosts="{${HOSTNAME}}" \
+    --set cernbox.ocis.config.server="https://${HOSTNAME}" \
     --set cernbox.cernboxconfig.server="https://${HOSTNAME}" \
     --set cernbox.gateway.hostname="https://${HOSTNAME}" \
     --set cernbox.authproviderbearer.oidc.issuer="https://${HOSTNAME}" \
-    --set cernbox.ocis.config.server="https://${HOSTNAME}" \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oidc_issuer=https://${HOSTNAME} \
     --set swan.jupyterhub.hub.config.KeyCloakAuthenticator.oauth_callback_url=https://${HOSTNAME}/swan/hub/oauth_callback \
     --set swan.jupyterhub.ingress.hosts="{${HOSTNAME}}" \
