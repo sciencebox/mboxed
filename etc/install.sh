@@ -87,8 +87,8 @@ verify_package_version_match() {
 }
 
 verify_string_version_match() {
-  local required=$1
-  local installed=$2
+  local required=$(echo $1 | cut -d '-' -f 1)
+  local installed=$(echo $2)
 
   if [ $required == $installed ]; then
     return 0 # installed at the required version
@@ -307,7 +307,7 @@ install_docker() {
 
 
 get_kubectl_version() {
-  echo $(kubectl version --client --short | awk '{print $NF}')
+  echo $(kubectl version --client --short 2>/dev/null | awk '{print $NF}')
 }
 
 _install_kubectl() {
