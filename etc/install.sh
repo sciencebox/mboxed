@@ -250,21 +250,23 @@ _install_docker() {
     centos)
       case "$OS_VERSION" in
         7)
-          docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
-          docker_cli_url=$DOCKER_URL_CENTOS7'docker-ce-cli-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
-          docker_scanplugin_url=$DOCKER_URL_CENTOS7'docker-scan-plugin-'$DOCKER_SCANPLUGIN_VERSION'-3.el7.x86_64.rpm'
-          docker_rootless_extras=$DOCKER_URL_CENTOS7'docker-ce-rootless-extras-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
-          containerd_package_url=$CONTAINERD_URL_CENTOS7'containerd.io-'$CONTAINERD_VERSION'-3.1.el7.x86_64.rpm'
+          docker_package_url=$DOCKER_URL_CENTOS7'docker-ce-'$DOCKER_VERSION'.el7.x86_64.rpm'
+          docker_cli_url=$DOCKER_URL_CENTOS7'docker-ce-cli-'$DOCKER_VERSION'.el7.x86_64.rpm'
+          docker_scanplugin_url=$DOCKER_URL_CENTOS7'docker-scan-plugin-'$DOCKER_SCANPLUGIN_VERSION'.el7.x86_64.rpm'
+          docker_rootless_extras=$DOCKER_URL_CENTOS7'docker-ce-rootless-extras-'$DOCKER_VERSION'.el7.x86_64.rpm'
+          docker_compose_plugin=$DOCKER_URL_CENTOS7'docker-compose-plugin-'$DOCKER_COMPOSE_PLUGIN_VERSION'.el7.x86_64.rpm'
+          docker_buildx_plugin=$DOCKER_URL_CENTOS7'docker-buildx-plugin-'$DOCKER_BUILDX_PLUGIN_VERSION'.el7.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS7'containerd.io-'$CONTAINERD_VERSION'.1.el7.x86_64.rpm'
           ;;
         8)
-          docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
-          docker_cli_url=$DOCKER_URL_CENTOS8'docker-ce-cli-'$DOCKER_VERSION'-3.el8.x86_64.rpm'
-          docker_scanplugin_url=$DOCKER_URL_CENTOS8'docker-scan-plugin-'$DOCKER_SCANPLUGIN_VERSION'-3.el7.x86_64.rpm'
-          docker_rootless_extras=$DOCKER_URL_CENTOS8'docker-ce-rootless-extras-'$DOCKER_VERSION'-3.el7.x86_64.rpm'
-          containerd_package_url=$CONTAINERD_URL_CENTOS8'containerd.io-'$CONTAINERD_VERSION'-3.1.el8.x86_64.rpm'
+          docker_package_url=$DOCKER_URL_CENTOS8'docker-ce-'$DOCKER_VERSION'.el8.x86_64.rpm'
+          docker_cli_url=$DOCKER_URL_CENTOS8'docker-ce-cli-'$DOCKER_VERSION'.el8.x86_64.rpm'
+          docker_scanplugin_url=$DOCKER_URL_CENTOS8'docker-scan-plugin-'$DOCKER_SCANPLUGIN_VERSION'.el7.x86_64.rpm'
+          docker_rootless_extras=$DOCKER_URL_CENTOS8'docker-ce-rootless-extras-'$DOCKER_VERSION'.el7.x86_64.rpm'
+          containerd_package_url=$CONTAINERD_URL_CENTOS8'containerd.io-'$CONTAINERD_VERSION'.1.el8.x86_64.rpm'
           ;;
       esac
-      yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url $docker_scanplugin_url $docker_rootless_extras
+      yum install -y -q $docker_package_url $docker_cli_url $containerd_package_url $docker_scanplugin_url $docker_rootless_extras $docker_compose_plugin $docker_buildx_plugin
       ;;
     ubuntu)
       docker_package_url=$DOCKER_URL_UBUNTU$OS_CODENAME'/pool/stable/amd64/docker-ce_'$DOCKER_VERSION'~3-0~ubuntu-'$OS_CODENAME'_amd64.deb'
